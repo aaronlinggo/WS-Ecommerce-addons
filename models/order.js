@@ -25,6 +25,7 @@ module.exports = (sequelize, DataTypes) => {
     destination: DataTypes.STRING,
     weight: DataTypes.INTEGER,
     costCourier: DataTypes.INTEGER,
+    statusOrder: DataTypes.ENUM(['PENDING', 'PROCESS', 'DELIVERED', 'CANCEL'])
   }, {
     sequelize,
     modelName: 'Order',
