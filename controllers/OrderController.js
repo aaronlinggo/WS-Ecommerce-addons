@@ -1,4 +1,6 @@
 const Order = require('../models').Order;
+const Payment = require('../models').Payment;
+
 const { validationResult } = require("express-validator");
 
 async function viewOrder(req, res) {
@@ -43,6 +45,15 @@ async function payOrder(req, res) {
     
     let result;
     let {codeOrder} = req.body;
+    // Ubah status di tabel payments untuk codeOrder
+
+    await Payment.update({
+        paymentStatus : 'paid'
+    },{
+        where : { 
+            codeOrder : codeOrder
+        }
+    });
     return res.status(200).send({order : result});
 }
 
