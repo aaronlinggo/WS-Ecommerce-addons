@@ -8,7 +8,7 @@ const {
 } = require('sequelize');
 const router = express.Router();
 
-router.get('/', AuthController.getData);
+// router.get('/', AuthController.getData);
 
 router.post('/register-developer', 
 check("firstName").isLength({ max: 32 }).withMessage("First Name is required!"),
