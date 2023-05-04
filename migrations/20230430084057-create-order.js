@@ -49,6 +49,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
+      statusOrder: {
+        allowNull: false,
+        type: Sequelize.ENUM(['PENDING', 'PROCESS', 'DELIVERED', 'CANCEL'])
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
