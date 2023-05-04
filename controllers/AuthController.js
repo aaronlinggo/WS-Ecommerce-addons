@@ -69,6 +69,16 @@ const RegisterCustomer = async (req, res) => {
     }
 };
 
+const getData = async (req, res) => {
+    let dev = await Developer.findAll({
+        include: [{
+            model: Customer,
+            attributes: ['firstName', 'lastName']
+        }]
+    });
+    return res.formatter.ok(dev);
+};
+
 // const LoginDeveloper = async (req, res) => {
 //     const {
 //         username,
@@ -158,4 +168,4 @@ const RegisterCustomer = async (req, res) => {
 //         return false;
 // };
 
-module.exports = { RegisterDeveloper, RegisterCustomer };
+module.exports = { RegisterDeveloper, RegisterCustomer, getData };
