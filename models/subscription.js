@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(developer) {
-      Subscription.belongsTo(developer, {foreignKey: 'id'});
+      // Subscription.belongsTo(developer, {foreignKey: 'id'});
     }
   }
   Subscription.init({
