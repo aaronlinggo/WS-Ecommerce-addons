@@ -4,6 +4,7 @@ const { sequelize } = require("./models");
 const auth = require("./routes/AuthRoutes");
 const {responseEnhancer}  = require('express-response-formatter');
 const customer = require("./routes/CustomerRoutes");
+const order = require("./routes/OrderRoutes");
 const port = 3000;
 
 app.use(responseEnhancer());
@@ -14,6 +15,7 @@ app.use(express.urlencoded({
 
 app.use("/api/auth", auth);
 app.use("/api/customer", customer);
+app.use("/api/order", order);
 
 app.listen(port, async function (){
     try {
