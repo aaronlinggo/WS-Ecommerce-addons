@@ -54,10 +54,44 @@ async function payOrder(req, res) {
             codeOrder : codeOrder
         }
     });
-    return res.status(200).send({order : result});
+
+    //Ubah status di tabel order menjadi process
+
+    await Order.update({
+        statusOrder : 'process'
+    },{
+        where : { 
+            codeOrder : codeOrder
+        }
+    });
+
+    return res.status(200).send({message : `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`});
+}
+
+async function checkOut(req, res) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()){
+        return res.formatter.badRequest(errors.mapped());
+    }
+    
+    let result;
+    let {codeOrder} = req.body;
+
+    //Ubah status di tabel order menjadi process
+
+    await Order.update({
+        statusOrder : 'pending'
+    },{
+        where : { 
+            codeOrder : codeOrder
+        }
+    });
+
+    return res.status(200).send();
 }
 
 module.exports = {
     viewOrder,
-    payOrder
+    payOrder,
+    checkOut
 }

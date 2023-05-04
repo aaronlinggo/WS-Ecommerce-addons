@@ -13,6 +13,7 @@ const { check } = require("express-validator");
 const router = express.Router();
 
 // /customer
+//GET
 router.get("/order/viewOrder/:customerId",
 check("customerId").custom((value) => {
     return Customer.findOne({ where: { id: value } }).then((user) => {
@@ -23,7 +24,8 @@ check("customerId").custom((value) => {
 })
 ,COrder.viewOrder);
 
-router.get("/order/payOrder/:customerId",
+//PUT
+router.put("/order/payOrder/:customerId",
 check("customerId").custom((value) => {
     return Customer.findOne({ where: { id: value } }).then((user) => {
         if (!user) {
