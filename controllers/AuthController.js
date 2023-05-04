@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
+const { validationResult } = require("express-validator");
+require("dotenv").config();
 
 const Customer = require('../models').Customer;
 const Developer = require('../models').Developer;
@@ -8,6 +10,10 @@ const {
 } = require('sequelize');
 
 const RegisterDeveloper = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()){
+        return res.formatter.badRequest(errors.mapped());
+    }
     const {
         firstName,
         lastName,
@@ -16,41 +22,59 @@ const RegisterDeveloper = async (req, res) => {
         username
     } = req.body;
 
-    if (!firstName, !lastName, !email, !password, !username){
-        return res.status(400).send("field kosong");
+    try {
+        let dev = await Developer.create({
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: bcrypt.hashSync(password, 12),
+            username: username
+        });
+        return res.formatter.created(dev);
+    } catch (error) {
+        console.log(error);
+        return res.formatter.badRequest(errors);
     }
-    else{
-        try {
-            let dev = await Developer.create({
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                password: bcrypt.hashSync(password, 12),
-                username: username
-            });
-            return res.status(201).send(dev);
-        } catch (error) {
-            console.log(error);
-            return res.status(400).send(error);
-        }
-    }
-    
 };
 
-// self.RegisterCustomer = async (developerId, firstName, lastName, email, phoneNumber, username, password) => {
-//     let cust = await Customer.create({
-//         developerId: developerId,
-//         firstName: firstName,
-//         lastName: lastName,
-//         email: email,
-//         phoneNumber: phoneNumber,
-//         username: username,
-//         password: bcrypt.hashSync(password, 12)
-//     });
-//     return cust;
-// };
+const RegisterCustomer = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()){
+        return res.formatter.badRequest(errors.mapped());
+    }
+    const {
+        developerId,
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        username,
+        password
+    } = req.body;
 
-// self.LoginDeveloper = async (username, password) => {
+    try {
+        let cust = await Customer.create({
+            developerId: developerId,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            phoneNumber: phoneNumber,
+            username: username,
+            password: bcrypt.hashSync(password, 12)
+        });
+        return res.formatter.created(cust);
+    } catch (error) {
+        console.log(error);
+        return res.formatter.badRequest(errors);
+    }
+};
+
+// const LoginDeveloper = async (req, res) => {
+//     const {
+//         username,
+//         password
+//     } = req.body;
+
 //     let dev = await Developer.findOne({
 //         attributes: ["username"],
 //         where: {
@@ -59,21 +83,23 @@ const RegisterDeveloper = async (req, res) => {
 //         },
 //     });
 
-//     if (!bcrypt.compareSync(req.body.password, dev.password)) {
+//     if (!dev){
+//         return res.status(404).send("username tidak terdaftar");
+//     }
+
+//     if (!bcrypt.compareSync(password, dev.password)) {
 //         return res.status(400).send("Invalid Password");
 //     } else {
 //         var token = jwt.sign({
 //                 "nrp": nrp,
 //                 "role": result[0].role
 //             },
-//             jwt_key, {
+//             process.env.JWT_KEY, {
 //                 expiresIn: '500m'
 //             }
 //         );
-//         return res.status(200).send(result[0]);
+//         return res.status(200).send(dev);
 //     }
-
-//     return dev;
 // };
 
 // self.checkUsernameDeveloper = async (username) => {
@@ -132,4 +158,4 @@ const RegisterDeveloper = async (req, res) => {
 //         return false;
 // };
 
-module.exports = { RegisterDeveloper };
+module.exports = { RegisterDeveloper, RegisterCustomer };
