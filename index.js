@@ -1,16 +1,34 @@
 const express = require("express");
 const app = express();
+const { sequelize } = require("./models")
+const auth = require("./routes/AuthRoutes");
+const port = 3000;
+
 app.use(express.json())
 app.use(express.urlencoded({
     extended: true
-}))
+}));
 
-//routes:
+app.use("/api/auth", auth);
 
+app.listen(port, async function (){
+    try {
+        await sequelize.authenticate();
+        console.log("Connection has been established successfully.");
+        return console.log(`Listening on port ${port}`);
+    } catch (error) {
+        console.log("Unable to connect to the database");
+    }
+})
 
-const port = 3000;
-app.listen(port, function () {
-    console.log(`Listening on port ${3000}`);
-});
+// //routes:
+// const auth = require("./routes/AuthRoutes");
+
+// app.use("/auth", auth);
+
+// const port = 3000;
+// app.listen(port, function () {
+//     console.log(`Listening on port ${3000}`);
+// });
 
 module.exports = app;

@@ -10,9 +10,9 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(subscription, customers, products) {
-      Developer.hasOne(subscription, {as: "subscription", foreignKey: 'developerId'});
-      Developer.hasMany(customers, {as: "customers", foreignKey: 'developerId'});
-      Developer.hasMany(products, {as: "products", foreignKey: 'developerId'});
+      // Developer.hasOne(subscription, {as: "subscription", foreignKey: 'developerId'});
+      // Developer.hasMany(customers, {as: "customers", foreignKey: 'developerId'});
+      // Developer.hasMany(products, {as: "products", foreignKey: 'developerId'});
     }
   }
   Developer.init({
