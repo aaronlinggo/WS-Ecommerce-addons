@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
-const { validationResult } = require("express-validator");
 require("dotenv").config();
 
 const Customer = require('../models').Customer;
@@ -10,10 +9,6 @@ const {
 } = require('sequelize');
 
 const RegisterDeveloper = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()){
-        return res.formatter.badRequest(errors.mapped());
-    }
     const {
         firstName,
         lastName,
@@ -28,20 +23,18 @@ const RegisterDeveloper = async (req, res) => {
             lastName: lastName,
             email: email,
             password: bcrypt.hashSync(password, 12),
-            username: username
+            username: username,
+            subscriptionId: 1,
+            expiredSubscription: null,
         });
         return res.formatter.created(dev);
     } catch (error) {
         console.log(error);
-        return res.formatter.badRequest(errors);
+        return res.formatter.badRequest(error);
     }
 };
 
 const RegisterCustomer = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()){
-        return res.formatter.badRequest(errors.mapped());
-    }
     const {
         developerId,
         firstName,

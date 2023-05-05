@@ -9,22 +9,30 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      developerId: {
+      type: {
         allowNull: false,
-        type: Sequelize.INTEGER,
-        references: {
-          model: 'developers',
-          key: 'id'
-        },
+        type: Sequelize.STRING,
       },
-      expired: {
+      price: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.INTEGER
       },
-      paymentStatus: {
-        allowNull: false,
-        type: Sequelize.ENUM(['paid', 'unpaid'])
-      },
+      // developerId: {
+      //   allowNull: false,
+      //   type: Sequelize.INTEGER,
+      //   references: {
+      //     model: 'developers',
+      //     key: 'id'
+      //   },
+      // },
+      // expired: {
+      //   allowNull: false,
+      //   type: Sequelize.DATE
+      // },
+      // paymentStatus: {
+      //   allowNull: false,
+      //   type: Sequelize.ENUM(['paid', 'unpaid'])
+      // },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE
