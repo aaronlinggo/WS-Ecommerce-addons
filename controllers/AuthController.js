@@ -30,7 +30,7 @@ const RegisterDeveloper = async (req, res) => {
         return res.formatter.created(dev);
     } catch (error) {
         console.log(error);
-        return res.formatter.badRequest(errors);
+        return res.formatter.badRequest(error);
     }
 };
 

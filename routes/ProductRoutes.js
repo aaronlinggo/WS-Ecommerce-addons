@@ -8,7 +8,7 @@ const router = express.Router();
 const multer = require("multer");
 const storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        callback(null, './assets')
+        callback(null, './assets/')
     },
     filename: function (req, file, callback) {
         callback(null, file.originalname);
@@ -20,5 +20,7 @@ var upd = multer({
 
 router.get('/', productController.getAll);
 router.post('/', upd.single('photo'), productController.addProduct);
+router.put('/edit/:id', upd.single('photo'), productController.editProduct);
+router.delete('/delete/:id', productController.deleteProduct);
 
 module.exports = router;
