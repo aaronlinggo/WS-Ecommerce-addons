@@ -12,7 +12,8 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.hasMany(models.Product, {foreignKey: 'developerId'});
       this.hasMany(models.Customer, {foreignKey: 'developerId'});
-      this.hasOne(models.Subscription, {foreignKey: 'developerId'});
+      this.belongsTo(models.Subscription, {foreignKey: 'id'});
+      this.hasMany(models.PaymentSubscription, {foreignKey: 'id'});
     }
   }
   Developer.init({
@@ -20,7 +21,10 @@ module.exports = (sequelize, DataTypes) => {
     lastName: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    username: DataTypes.STRING
+    username: DataTypes.STRING,
+    username: DataTypes.STRING,
+    subscriptionId: DataTypes.INTEGER,
+    expiredSubscription: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'Developer',
