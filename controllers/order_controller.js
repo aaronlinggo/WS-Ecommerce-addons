@@ -1,34 +1,13 @@
-const db = require('../models');
+const { sequelize } = require('../models');
+
+const Order = require('../models').Order;
+
+const getAllOrder = async (req, res) => {
+  let orders = await Order.findAll();
+
+  return res.status(200).send(orders);
+}
 
 module.exports = {
-  seeAllOrder: () => {
-    try {
-      const order = db["Order"].findAll({
-        attributes: { exclude: ["createdAt", "updatedAt"] },
-      });
-    } catch (err) {
-      throw err;
-    }
-  },
-
-  acceptOrder: () => {
-    try {
-    } catch (err) {
-      throw err;
-    }
-  },
-
-  completeOrder: () => {
-    try {
-    } catch (err) {
-      throw err;
-    }
-  },
-
-  cancelOrder: () => {
-    try {
-    } catch (err) {
-      throw err;
-    }
-  },
+  getAllOrder
 };

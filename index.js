@@ -7,7 +7,7 @@ const customer = require("./routes/CustomerRoutes");
 const order = require("./routes/OrderRoutes");
 const product = require("./routes/ProductRoutes");
 const review = require("./routes/review_routes");
-const orderr = require("./routes/order_routes");
+const order_routes = require("./routes/order_routes");
 const port = 3000;
 
 app.use(responseEnhancer());
@@ -21,7 +21,7 @@ app.use("/api/customer", customer);
 app.use("/api/order", order);
 app.use("/api/product", product);
 app.use("/api/review", review);
-app.use("/api/order_routes", orderr);
+app.use("/api/order_routes", order_routes);
 
 app.listen(port, async function (){
     try {

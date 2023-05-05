@@ -1,20 +1,8 @@
 const express = require('express');
 const router = express.Router();
 
-const order = require('../controllers/order_controller');
+const order_controller = require('../controllers/order_controller');
 
-// lihat request order
-router.get('/', async (req, res) => {
-    let orders = await order.seeAllOrder();
-
-    const output = {
-      status: 200,
-      body: {
-        orders,
-      },
-    };
-
-    return res.status(200).json(output);
-});
+router.get('/', order_controller.getAllOrder);
 
 module.exports = router;
