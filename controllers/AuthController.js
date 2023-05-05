@@ -69,26 +69,26 @@ const LoginDeveloper = async (req, res) => {
     } = req.body;
 
     let dev = await Developer.findOne({
-        attributes: ["username", "password"],
+        attributes: ["id", "username", "password", "email"],
         where: {
             username: username
         },
     });
-    if (!dev){
+    if (!dev) {
         return res.formatter.notFound("Username not registered!");
     }
-    else{
+    else {
         if (!bcrypt.compareSync(password, dev.dataValues.password)) {
             return res.formatter.badRequest("Invalid Password");
         } else {
             var token = jwt.sign({
-                    "id": dev.dataValues.id,
-                    "username": dev.dataValues.username,
-                    "email": dev.dataValues.email
-                },
+                "id": dev.dataValues.id,
+                "username": dev.dataValues.username,
+                "email": dev.dataValues.email
+            },
                 process.env.JWT_KEY, {
-                    expiresIn: '500m'
-                }
+                expiresIn: '500m'
+            }
             );
             var response = {
                 username: dev.dataValues.username,
@@ -106,27 +106,27 @@ const LoginCustomer = async (req, res) => {
     } = req.body;
 
     let cust = await Customer.findOne({
-        attributes: ["username", "password", "developerId"],
+        attributes: ["id", "username", "password", "email", "developerId"],
         where: {
             username: username
         },
     });
-    if (!cust){
+    if (!cust) {
         return res.formatter.notFound("Username not registered!");
     }
-    else{
+    else {
         if (!bcrypt.compareSync(password, cust.dataValues.password)) {
             return res.formatter.badRequest("Invalid Password");
         } else {
             var token = jwt.sign({
-                    "id": cust.dataValues.id,
-                    "username": cust.dataValues.username,
-                    "email": cust.dataValues.email,
-                    "developerId": cust.dataValues.developerId
-                },
+                "id": cust.dataValues.id,
+                "username": cust.dataValues.username,
+                "email": cust.dataValues.email,
+                "developerId": cust.dataValues.developerId
+            },
                 process.env.JWT_KEY, {
-                    expiresIn: '500m'
-                }
+                expiresIn: '500m'
+            }
             );
             var response = {
                 username: cust.dataValues.username,
