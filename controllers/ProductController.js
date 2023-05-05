@@ -22,20 +22,29 @@ const addProduct = async (req, res) => {
     var developerId = req.body.developerId;
     var name = req.body.name;
     var price = req.body.price;
-    var photo = req.body.photo;
+    var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
     let products = await Product.findAll();
     var code = "WSEC" + (products.length + "").padStart(5, '0');
-    const newProduct = await Product.create({
+    var newProduct = await Product.create({
         codeProduct: code,
         developerId: developerId,
         name: name,
         price: price,
-        photo: photo,
-        stock: parseInt(stock),
+        photo: photo.originalname,
+        stock: stock,
         description: description
     });
+    newProduct = {
+        "Product Code": code,
+        "ID Developer": developerId,
+        "Name": name,
+        "Price": price,
+        "Photo": photo.originalname,
+        "Stock": stock,
+        "Description": description
+    };
     return res.status(200).send(newProduct);
 }
 module.exports = {
