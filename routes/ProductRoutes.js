@@ -15,7 +15,9 @@ const storage = multer.diskStorage({
         var token = req.header("x-auth-token");
         userlogin = jwt.verify(token, process.env.JWT_KEY);
         const path = `./storage/${userlogin.username}`
-        fs.mkdirSync(path, { recursive: true })
+        fs.mkdirSync(path, {
+            recursive: true
+        })
         callback(null, path)
     },
     filename: function (req, file, callback) {
@@ -27,7 +29,7 @@ var upd = multer({
 });
 
 router.get('/', authMiddleware.developerMiddleware, productController.getAll);
-router.post('/', upd.single('photo'), authMiddleware.developerMiddleware,productController.addProduct);
+router.post('/', upd.single('photo'), authMiddleware.developerMiddleware, productController.addProduct);
 router.put('/edit/:id', upd.single('photo'), authMiddleware.developerMiddleware, productController.editProduct);
 router.delete('/delete/:id', authMiddleware.developerMiddleware, productController.deleteProduct);
 router.get('/detail/:id', authMiddleware.developerMiddleware, productController.getDetailProduct);
