@@ -1,6 +1,7 @@
 const productController = require('../controllers/ProductController');
 const express = require("express");
 const Product = require('../models').Product;
+const authMiddleware = require("../middleware/AuthMiddleware")
 const {
     Op
 } = require('sequelize');
@@ -18,10 +19,10 @@ var upd = multer({
     storage: storage
 });
 
-router.get('/', productController.getAll);
-router.post('/', upd.single('photo'), productController.addProduct);
-router.put('/edit/:id', upd.single('photo'), productController.editProduct);
-router.delete('/delete/:id', productController.deleteProduct);
-router.get('/detail/:id', productController.getDetailProduct);
+router.get('/', authMiddleware.developerMiddleware, productController.getAll);
+router.post('/', upd.single('photo'), authMiddleware.developerMiddleware,productController.addProduct);
+router.put('/edit/:id', upd.single('photo'), authMiddleware.developerMiddleware, productController.editProduct);
+router.delete('/delete/:id', authMiddleware.developerMiddleware, productController.deleteProduct);
+router.get('/detail/:id', authMiddleware.developerMiddleware, productController.getDetailProduct);
 
 module.exports = router;

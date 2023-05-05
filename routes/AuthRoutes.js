@@ -9,8 +9,6 @@ const {
 } = require('sequelize');
 const router = express.Router();
 
-// router.get('/', AuthController.getData);
-
 router.post('/register-developer',
     check("firstName").isLength({ max: 32 }).withMessage("First Name is required!"),
     check("lastName").isLength({ max: 32 }).withMessage("Last Name is required!"),
@@ -75,5 +73,29 @@ router.post('/register-customer',
     }),
     validationMiddleware,
     AuthController.RegisterCustomer);
+
+router.post('/login-developer',
+    check("username").custom((value) => {
+        return Developer.findOne({ where: { username: value } }).then((user) => {
+            if (!user) {
+                return Promise.reject("Username not registered!");
+            }
+        })
+    }),
+    check("password").isLength({ min: 8 }).withMessage("Password length minimum 8 characters!"),
+    validationMiddleware,
+    AuthController.LoginDeveloper);
+
+router.post('/login-customer',
+    check("username").custom((value) => {
+        return Customer.findOne({ where: { username: value } }).then((user) => {
+            if (!user) {
+                return Promise.reject("Username not registered!");
+            }
+        })
+    }),
+    check("password").isLength({ min: 8 }).withMessage("Password length minimum 8 characters!"),
+    validationMiddleware,
+    AuthController.LoginCustomer);
 
 module.exports = router;
