@@ -18,7 +18,7 @@ function generateFakerItems(rowCount) {
   const data = [];
   for (let i = 0; i < rowCount; i++) {
     const newItem = {
-      codeProduct: "WSAC" + ((data.length + 1) + "").padStart(5, '0'),
+      codeProduct: "WSEC" + ((data.length + 1) + "").padStart(5, '0'),
       developerId: faker.helpers.arrayElement([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       name: faker.commerce.productName(),
       price: faker.commerce.price(10000, 100000, 0),

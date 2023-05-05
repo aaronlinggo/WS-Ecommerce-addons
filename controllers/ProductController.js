@@ -75,6 +75,7 @@ const editProduct = async (req, res) => {
             codeProduct: codeProduct
         }
     });
+    
     let namafile = product.photo;
     fs.unlinkSync('./assets/' + namafile);
 
