@@ -10,13 +10,13 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      this.belongsTo(models.Developer, {foreignKey: 'id'});
+      this.hasMany(models.Developer, {foreignKey: 'subscriptionId'});
+      this.hasMany(models.PaymentSubscription, {foreignKey: 'subscriptionId'});
     }
   }
   Subscription.init({
-    developerId: DataTypes.INTEGER,
-    expired: DataTypes.DATE,
-    paymentStatus: DataTypes.ENUM(['paid', 'unpaid'])
+    type: DataTypes.STRING,
+    price: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Subscription',
