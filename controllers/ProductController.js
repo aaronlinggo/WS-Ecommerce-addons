@@ -1,11 +1,13 @@
 const {
     sequelize
 } = require('../models');
-
+const jwt = require('jsonwebtoken');
+require("dotenv").config();
 const Product = require('../models').Product;
 const formatRupiah = require("../helpers/formatRupiah");
 const Developer = require('../models').Developer;
 const fs = require("fs");
+const developer = require('../models/developer');
 
 const getAll = async (req, res) => {
     let products = await Product.findAll({
@@ -32,7 +34,8 @@ const getAll = async (req, res) => {
 }
 
 const addProduct = async (req, res) => {
-    var developerId = req.body.developerId;
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
     var name = req.body.name;
     var price = req.body.price;
     var photo = req.file;
@@ -42,7 +45,7 @@ const addProduct = async (req, res) => {
     var code = "WSEC" + ((products.length + 1) + "").padStart(5, '0');
     var newProduct = await Product.create({
         codeProduct: code,
-        developerId: developerId,
+        developerId: dev.id,
         name: name,
         price: price,
         photo: photo.originalname,
@@ -51,7 +54,7 @@ const addProduct = async (req, res) => {
     });
     newProduct = {
         "Product Code": code,
-        "ID Developer": developerId,
+        "ID Developer": dev.id,
         "Name": name,
         "Price": formatRupiah(price),
         "Photo": photo.originalname,
