@@ -39,7 +39,7 @@ const addProduct = async (req, res) => {
     var stock = req.body.stock;
     var description = req.body.description;
     let products = await Product.findAll();
-    var code = "WSEC" + ((products.length+1) + "").padStart(5, '0');
+    var code = "WSEC" + ((products.length + 1) + "").padStart(5, '0');
     var newProduct = await Product.create({
         codeProduct: code,
         developerId: developerId,
@@ -122,10 +122,10 @@ const deleteProduct = async (req, res) => {
         }
     });
     let namafile = product.photo;
-    fs.unlinkSync('./assets/'+namafile);
+    fs.unlinkSync('./assets/' + namafile);
     await Product.destroy({
         where: {
-            codeProduct : codeProduct
+            codeProduct: codeProduct
         }
     });
     var hasil = {
@@ -134,9 +134,36 @@ const deleteProduct = async (req, res) => {
     return res.status(200).send(hasil);
 }
 
+const getDetailProduct = async (req, res) => {
+    var codeProduct = req.params.id;
+    let product = await Product.findOne({
+        attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+        include: [{
+            model: Developer,
+            attributes: [
+                [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+            ]
+        }],
+        where: {
+            codeProduct: codeProduct
+        }
+    });
+    var hasil = {
+        "Product Code": product.codeProduct,
+        "Developer": product["Developer"]["dataValues"]["developer_name"],
+        "Name": product.name,
+        "Price": formatRupiah(product.price),
+        "Photo": product.photo,
+        "Stock": product.stock,
+        "Description": product.description
+    };
+    return res.status(200).send(hasil);
+}
+
 module.exports = {
     getAll,
     addProduct,
     editProduct,
-    deleteProduct
+    deleteProduct,
+    getDetailProduct
 };
