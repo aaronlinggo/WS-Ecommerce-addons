@@ -17,16 +17,15 @@ const developerMiddleware = async (req, res, next) => {
     var token = req.header("x-auth-token");
     try {
         userlogin = jwt.verify(token, process.env.JWT_KEY);
-        let dev = await Developer.findOne({ 
+        let dev = await Developer.findOne({
             attribues: ["username"],
-            where: { 
-                username: userlogin.username 
-            } 
+            where: {
+                username: userlogin.username
+            }
         });
-        if (!dev){
+        if (!dev) {
             throw 'Unauthorized';
-        }
-        else{
+        } else {
             next();
         }
     } catch (err) {
@@ -38,16 +37,15 @@ const customerMiddleware = async (req, res, next) => {
     var token = req.header("x-auth-token");
     try {
         userlogin = jwt.verify(token, process.env.JWT_KEY);
-        let cust = await Customer.findOne({ 
+        let cust = await Customer.findOne({
             attribues: ["username"],
-            where: { 
-                username: userlogin.username 
-            } 
+            where: {
+                username: userlogin.username
+            }
         });
-        if (!cust){
+        if (!cust) {
             throw 'Unauthorized';
-        }
-        else{
+        } else {
             next();
         }
     } catch (err) {
@@ -55,4 +53,8 @@ const customerMiddleware = async (req, res, next) => {
     }
 };
 
-module.exports = { authMiddleware, developerMiddleware, customerMiddleware };
+module.exports = {
+    authMiddleware,
+    developerMiddleware,
+    customerMiddleware
+};
