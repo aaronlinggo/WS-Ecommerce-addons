@@ -12,6 +12,10 @@ const {
 } = require('sequelize');
 const router = express.Router();
 
+router.get('/detail-payment',
+    authMiddleware.developerMiddleware,
+    SubscriptionController.getPayment);
+
 router.post('/buy-subscription',
     check("type").custom((value) => {
         return Subscription.findOne({
@@ -37,13 +41,10 @@ router.post('/payment-subscription',
         }).then((ps) => {
             if (!ps) {
                 return Promise.reject("Code Payment Not Found");
-            } else {
-                if (ps.dataValues.paymentStatus == "paid") {
-                    return Promise.reject("Code Payment already paid!");
-                }
             }
         })
     }),
+    check("subtotal").isNumeric().withMessage("subtotal is required!"),
     validationMiddleware,
     SubscriptionController.PaySubscription);
 

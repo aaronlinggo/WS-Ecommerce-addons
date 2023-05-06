@@ -1,6 +1,9 @@
+const cron = require('node-cron');
+const moment = require('moment');
 const express = require("express");
 const app = express();
 const { sequelize } = require("./models");
+const Developer = require("./models").Developer;
 const auth = require("./routes/AuthRoutes");
 const {responseEnhancer}  = require('express-response-formatter');
 const customer = require("./routes/CustomerRoutes");
@@ -9,6 +12,7 @@ const product = require("./routes/ProductRoutes");
 const review = require("./routes/review_routes");
 const order_routes = require("./routes/order_routes");
 const subscription = require("./routes/SubscriptionRoutes");
+
 const port = 3000;
 
 app.use(responseEnhancer());
@@ -25,6 +29,28 @@ app.use("/api/review", review);
 app.use("/api/order_routes", order_routes);
 app.use("/api/subscription", subscription);
 
+cron.schedule('0 0 * * *', async function() {
+    console.log("Checking expired subscription!");
+    let dev = await Developer.findAll({
+        attributes: ["id", "subscriptionId", "expiredSubscription"]
+    });
+    for (let i = 0; i < dev.length; i++) {
+        if (dev[i].dataValues.subscriptionId == 2){
+            if (moment(dev[i].dataValues.expiredSubscription).format("MM-DD-YYYY") == moment().format("MM-DD-YYYY")){
+                await Developer.update({
+                    subscriptionId: 1,
+                    expiredSubscription: null
+                }, {
+                    where: {
+                        id: dev[i].id
+                    }
+                });
+                console.log(`Developer ID ${dev[i].id} subscription expired!`);
+            }
+        }
+    }
+});
+
 app.listen(port, async function (){
     try {
         await sequelize.authenticate();
@@ -34,15 +60,5 @@ app.listen(port, async function (){
         console.log("Unable to connect to the database");
     }
 })
-
-// //routes:
-// const auth = require("./routes/AuthRoutes");
-
-// app.use("/auth", auth);
-
-// const port = 3000;
-// app.listen(port, function () {
-//     console.log(`Listening on port ${3000}`);
-// });
 
 module.exports = app;

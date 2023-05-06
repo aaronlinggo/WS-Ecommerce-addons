@@ -18,7 +18,7 @@ const developerMiddleware = async (req, res, next) => {
     try {
         userlogin = jwt.verify(token, process.env.JWT_KEY);
         let dev = await Developer.findOne({
-            attribues: ["username"],
+            attributes: ["username"],
             where: {
                 username: userlogin.username
             }
