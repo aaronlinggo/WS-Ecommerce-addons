@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcrypt');
+var moment = require('moment');
 require("dotenv").config();
-
 const Developer = require('../models').Developer;
 const PaymentSubscription = require('../models').PaymentSubscription;
 const Subscription = require('../models').Subscription;
@@ -9,6 +8,32 @@ const {
     Op
 } = require('sequelize');
 
+
+const getPayment = async (req, res) => {
+    var token = req.header("x-auth-token");
+    let dev = jwt.verify(token, process.env.JWT_KEY);
+    
+    let payment = await PaymentSubscription.findOne({
+        attributes: ["codePayment", "developerId", "subtotal", "paymentStatus"],
+        include: [{
+            model: Subscription,
+            attributes: [
+                "type"
+            ]
+        }],
+        where: {
+            developerId: dev.id,
+            paymentStatus: "unpaid"
+        },
+    });
+    
+    if (payment){
+        return res.formatter.ok(payment);
+    }
+    else{
+        return res.formatter.ok({message: "you dont have any payment for now!"})
+    }
+};
 
 const BuySubscription = async (req, res) => {
     var token = req.header("x-auth-token");
@@ -65,7 +90,7 @@ const BuySubscription = async (req, res) => {
             });
         }
     } else {
-        return res.formatter.ok(null, "Developer already subscribe PREMIUM");
+        return res.formatter.ok({message: "Developer already subscribe PREMIUM"});
     }
 };
 
@@ -89,33 +114,37 @@ const PaySubscription = async (req, res) => {
     });
 
     if (payment) {
-        if (subtotal == payment.subtotal) {
-            await PaymentSubscription.update({
-                paymentStatus: "paid"
-            }, {
-                where: {
-                    codePayment: codePayment
-                }
-            });
-            var date = new Date();
-            var next_month = new Date(date.getMonth() + 1);
-            await Developer.update({
-                subscriptionId: payment.dataValues.subscriptionId,
-                expiredSubscription: next_month
-            }, {
-                where: {
-                    id: payment.dataValues.developerId
-                }
-            });
-
-            return res.formatter.ok({
-                type_subscription: payment.Subscription.dataValues.type,
-                expiredSubscription: next_month
-            }, `${codePayment} successfully paid`);
-        } else {
-            return res.formatter.badRequest({
-                message: "Subtotal not match!"
-            });
+        if (payment.dataValues.paymentStatus == "paid") {
+            return res.formatter.ok({message: `Code Payment ${codePayment} already paid!`});
+        }
+        else{
+            if (subtotal == payment.subtotal) {
+                await PaymentSubscription.update({
+                    paymentStatus: "paid"
+                }, {
+                    where: {
+                        codePayment: codePayment
+                    }
+                });
+                var next_month = moment().add(1, 'months').format()
+                await Developer.update({
+                    subscriptionId: payment.dataValues.subscriptionId,
+                    expiredSubscription: next_month
+                }, {
+                    where: {
+                        id: payment.dataValues.developerId
+                    }
+                });
+    
+                return res.formatter.ok({
+                    type_subscription: payment.Subscription.dataValues.type,
+                    expiredSubscription: moment(next_month).format("MM-DD-YYYY")
+                }, `${codePayment} successfully paid`);
+            } else {
+                return res.formatter.badRequest({
+                    message: "Subtotal not match!"
+                });
+            }
         }
     } else {
         return res.formatter.notFound({
@@ -126,5 +155,6 @@ const PaySubscription = async (req, res) => {
 
 module.exports = {
     BuySubscription,
-    PaySubscription
+    PaySubscription,
+    getPayment
 };
