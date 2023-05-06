@@ -11,30 +11,141 @@ const fs = require("fs");
 const getAll = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
-    let products = await Product.findAll({
-        attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
-        include: [{
-            model: Developer,
-            attributes: [
-                [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
-            ]
-        }],
-        where: {
-            developerId: dev.id
+    var namaprod = req.params.nama; //buat search
+    var ascdescprice = req.query.price;
+    var ascdescstock = req.query.stock;
+
+    if (namaprod) {
+        let product = await Product.findOne({
+            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            include: [{
+                model: Developer,
+                attributes: [
+                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                ]
+            }],
+            where: {
+                developerId: dev.id,
+                name: namaprod
+            }
+        });
+        if (product <= 0) {
+            var hasil = {
+                message: "Product tidak ditemukan!"
+            };
+            return res.status(404).send(hasil);
+        } else {
+            var hasil = {
+                "Product Code": product.codeProduct,
+                "Name": product.name,
+                "Price": product.price,
+                "Photo": product.photo,
+                "Stock": product.stock,
+                "Description": product.description,
+                "Developer Name": product["Developer"]["dataValues"]["developer_name"]
+            }
+            return res.status(200).send(hasil);
         }
-    });
-    products = products.map(p => {
-        return {
-            "Product Code": p.codeProduct,
-            "Name": p.name,
-            "Price": formatRupiah(p.price),
-            "Photo": p.photo,
-            "Stock": p.stock,
-            "Description": p.description,
-            "Developer Name": p["Developer"]["dataValues"]["developer_name"]
-        };
-    })
-    return res.status(200).send(products);
+    } else {
+        let products = await Product.findAll({
+            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            include: [{
+                model: Developer,
+                attributes: [
+                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                ]
+            }],
+            where: {
+                developerId: dev.id
+            }
+        });
+        if (ascdescprice) {
+            if (ascdescprice.toUpperCase() == "ASC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['price', 'ASC']
+                    ]
+                });
+            }
+            else if(ascdescprice.toUpperCase()=="DESC"){
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['price', 'DESC']
+                    ]
+                });
+            }
+        }
+
+        if(ascdescstock)
+        {
+            if (ascdescstock.toUpperCase() == "ASC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['stock', 'ASC']
+                    ]
+                });
+            } else if (ascdescstock.toUpperCase() == "DESC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['stock', 'DESC']
+                    ]
+                });
+            }
+        }
+        products = products.map(p => {
+            return {
+                "Product Code": p.codeProduct,
+                "Name": p.name,
+                "Price": formatRupiah(p.price),
+                "Photo": p.photo,
+                "Stock": p.stock,
+                "Description": p.description,
+                "Developer Name": p["Developer"]["dataValues"]["developer_name"]
+            };
+        })
+        return res.status(200).send(products);
+    }
+
 }
 
 const addProduct = async (req, res) => {

@@ -1,6 +1,5 @@
 const productController = require('../controllers/ProductController');
 const express = require("express");
-const Product = require('../models').Product;
 const authMiddleware = require("../middleware/AuthMiddleware")
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
@@ -28,7 +27,7 @@ var upd = multer({
     storage: storage
 });
 
-router.get('/', authMiddleware.developerMiddleware, productController.getAll);
+router.get('/:nama?', authMiddleware.developerMiddleware, productController.getAll);
 router.post('/', upd.single('photo'), authMiddleware.developerMiddleware, productController.addProduct);
 router.put('/edit/:id', upd.single('photo'), authMiddleware.developerMiddleware, productController.editProduct);
 router.delete('/delete/:id', authMiddleware.developerMiddleware, productController.deleteProduct);
