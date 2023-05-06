@@ -1,6 +1,11 @@
 const productController = require('../controllers/ProductController');
 const express = require("express");
 const authMiddleware = require("../middleware/AuthMiddleware")
+const validationMiddleware = require("../middleware/ValidationMiddleware")
+const Product = require('../models').Product;
+const {
+    check
+} = require("express-validator");
 const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const fs = require('fs');
@@ -27,10 +32,37 @@ var upd = multer({
     storage: storage
 });
 
-router.get('/:nama?', authMiddleware.developerMiddleware, productController.getAll);
-router.post('/', upd.single('photo'), authMiddleware.developerMiddleware, productController.addProduct);
-router.put('/edit/:id', upd.single('photo'), authMiddleware.developerMiddleware, productController.editProduct);
-router.delete('/delete/:id', authMiddleware.developerMiddleware, productController.deleteProduct);
-router.get('/detail/:id', authMiddleware.developerMiddleware, productController.getDetailProduct);
+router.get('/:nama?',
+    check("nama").optional({
+        nullable: true
+    }).custom((value) => {
+        return Product.findOne({
+            where: {
+                name: value
+            }
+        }).then((ps) => {
+            if (!ps) {
+                return Promise.reject("Product Not Found");
+            }
+        })
+    }), validationMiddleware, authMiddleware.developerMiddleware, productController.getAll);
+router.post('/', upd.single('photo'),
+    check("name").notEmpty().withMessage("Name is required!"),
+    check("price").notEmpty().withMessage("Price is required!"),
+    check("price").isNumeric().withMessage("Price must be numeric!"),
+    check("stock").notEmpty().withMessage("Stock is required!"),
+    check("stock").isNumeric().withMessage("Stock must be numeric!"),
+    check("description").notEmpty().withMessage("Description is required!"),
+    validationMiddleware, authMiddleware.developerMiddleware, productController.addProduct);
+router.put('/edit/:id', upd.single('photo'),
+    check("name").notEmpty().withMessage("Name is required!"),
+    check("price").notEmpty().withMessage("Price is required!"),
+    check("price").isNumeric().withMessage("Price must be numeric!"),
+    check("stock").notEmpty().withMessage("Stock is required!"),
+    check("stock").isNumeric().withMessage("Stock must be numeric!"),
+    check("description").notEmpty().withMessage("Description is required!"),
+    validationMiddleware, authMiddleware.developerMiddleware, productController.editProduct);
+router.delete('/delete/:id', validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
+router.get('/detail/:id', validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
 
 module.exports = router;

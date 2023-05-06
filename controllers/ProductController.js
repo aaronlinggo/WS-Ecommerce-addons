@@ -14,7 +14,6 @@ const getAll = async (req, res) => {
     var namaprod = req.params.nama; //buat search
     var ascdescprice = req.query.price;
     var ascdescstock = req.query.stock;
-
     if (namaprod) {
         let product = await Product.findOne({
             attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
@@ -29,23 +28,16 @@ const getAll = async (req, res) => {
                 name: namaprod
             }
         });
-        if (product <= 0) {
-            var hasil = {
-                message: "Product tidak ditemukan!"
-            };
-            return res.status(404).send(hasil);
-        } else {
-            var hasil = {
-                "Product Code": product.codeProduct,
-                "Name": product.name,
-                "Price": product.price,
-                "Photo": product.photo,
-                "Stock": product.stock,
-                "Description": product.description,
-                "Developer Name": product["Developer"]["dataValues"]["developer_name"]
-            }
-            return res.status(200).send(hasil);
+        var hasil = {
+            "Product Code": product.codeProduct,
+            "Name": product.name,
+            "Price": product.price,
+            "Photo": product.photo,
+            "Stock": product.stock,
+            "Description": product.description,
+            "Developer Name": product["Developer"]["dataValues"]["developer_name"]
         }
+        return res.status(200).send(hasil);
     } else {
         let products = await Product.findAll({
             attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
@@ -76,8 +68,7 @@ const getAll = async (req, res) => {
                         ['price', 'ASC']
                     ]
                 });
-            }
-            else if(ascdescprice.toUpperCase()=="DESC"){
+            } else if (ascdescprice.toUpperCase() == "DESC") {
                 products = await Product.findAll({
                     attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
                     include: [{
@@ -96,8 +87,7 @@ const getAll = async (req, res) => {
             }
         }
 
-        if(ascdescstock)
-        {
+        if (ascdescstock) {
             if (ascdescstock.toUpperCase() == "ASC") {
                 products = await Product.findAll({
                     attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
@@ -156,8 +146,15 @@ const addProduct = async (req, res) => {
     var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
-    let products = await Product.findAll();
-    var code = "WSEC" + ((products.length + 1) + "").padStart(5, '0');
+    let products = await Product.findOne({
+        order: [
+            ["codeProduct", "DESC"]
+        ],
+        limit: 1
+    });
+    var temp = products.codeProduct;
+    var angkaterakhir = parseInt(temp.slice(4, 9));
+    var code = "WSEC" + ((angkaterakhir + 1) + "").padStart(5, '0');
     var namafilephoto = photo.originalname;
     var path = "/storage/" + dev.username + "/" + namafilephoto;
     var newProduct = await Product.create({
