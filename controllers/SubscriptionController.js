@@ -24,8 +24,8 @@ const BuySubscription = async (req, res) => {
         },
     });
 
-    if (dev.subscriptionId == 1){
-        if (subscription.dataValues.type != "BASIC"){
+    if (dev.subscriptionId == 1) {
+        if (subscription.dataValues.type != "BASIC") {
             let payment = await PaymentSubscription.findOne({
                 attributes: ["codePayment", "subtotal", "paymentStatus"],
                 where: {
@@ -33,7 +33,7 @@ const BuySubscription = async (req, res) => {
                     paymentStatus: "unpaid"
                 },
             });
-            if (!payment){
+            if (!payment) {
                 let allPayment = await PaymentSubscription.findAll({
                     attributes: ["codePayment"],
                 });
@@ -45,7 +45,7 @@ const BuySubscription = async (req, res) => {
                     subtotal: subscription.dataValues.price,
                     paymentStatus: "unpaid"
                 });
-    
+
                 let response = {
                     codePayment: codePayment,
                     developerId: dev.id,
@@ -53,19 +53,18 @@ const BuySubscription = async (req, res) => {
                     subtotal: subscription.dataValues.price,
                     paymentStatus: "unpaid"
                 };
-    
+
                 return res.formatter.created(response);
-            }
-            else{
+            } else {
                 // "Please payment your last subscribe"
                 return res.formatter.ok(payment);
             }
+        } else {
+            return res.formatter.badRequest({
+                message: "Buy Subscription only for PREMIUM!"
+            });
         }
-        else{
-            return res.formatter.badRequest({message: "Buy Subscription only for PREMIUM!"});
-        }
-    }
-    else{
+    } else {
         return res.formatter.ok(null, "Developer already subscribe PREMIUM");
     }
 };
@@ -89,8 +88,8 @@ const PaySubscription = async (req, res) => {
         },
     });
 
-    if (payment){
-        if (subtotal == payment.subtotal){
+    if (payment) {
+        if (subtotal == payment.subtotal) {
             await PaymentSubscription.update({
                 paymentStatus: "paid"
             }, {
@@ -98,7 +97,8 @@ const PaySubscription = async (req, res) => {
                     codePayment: codePayment
                 }
             });
-            var next_month = new Date(now.setMonth(now.getMonth() + 1));
+            var date = new Date();
+            var next_month = new Date(date.getMonth() + 1);
             await Developer.update({
                 subscriptionId: payment.dataValues.subscriptionId,
                 expiredSubscription: next_month
@@ -112,14 +112,19 @@ const PaySubscription = async (req, res) => {
                 type_subscription: payment.Subscription.dataValues.type,
                 expiredSubscription: next_month
             }, `${codePayment} successfully paid`);
+        } else {
+            return res.formatter.badRequest({
+                message: "Subtotal not match!"
+            });
         }
-        else{
-            return res.formatter.badRequest({message: "Subtotal not match!"});
-        }
-    }
-    else{
-        return res.formatter.notFound({message: "Code Payment Not Found"})
+    } else {
+        return res.formatter.notFound({
+            message: "Code Payment Not Found"
+        })
     }
 };
 
-module.exports = { BuySubscription, PaySubscription };
+module.exports = {
+    BuySubscription,
+    PaySubscription
+};
