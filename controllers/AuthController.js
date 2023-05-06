@@ -69,7 +69,7 @@ const LoginDeveloper = async (req, res) => {
     } = req.body;
 
     let dev = await Developer.findOne({
-        attributes: ["id", "username", "password", "email"],
+        attributes: ["id", "username", "password", "email", "subscriptionId"],
         where: {
             username: username
         },
@@ -84,7 +84,8 @@ const LoginDeveloper = async (req, res) => {
             var token = jwt.sign({
                 "id": dev.dataValues.id,
                 "username": dev.dataValues.username,
-                "email": dev.dataValues.email
+                "email": dev.dataValues.email,
+                "subscriptionId": dev.dataValues.subscriptionId
             },
                 process.env.JWT_KEY, {
                 expiresIn: '500m'
