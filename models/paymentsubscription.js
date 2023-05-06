@@ -15,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   PaymentSubscription.init({
+    codePayment: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+    },
     developerId: DataTypes.INTEGER,
     subscriptionId: DataTypes.INTEGER,
     subtotal: DataTypes.INTEGER,
@@ -22,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'PaymentSubscription',
+    tableName: "paymentsubscriptions",
   });
   return PaymentSubscription;
 };
