@@ -25,6 +25,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
+      weight:{
+        allowNull:false,
+        type: Sequelize.INTEGER
+      },
       photo: {
         allowNull: false,
         type: Sequelize.STRING
@@ -43,6 +47,9 @@ module.exports = {
       },
       updatedAt: {
         allowNull: false,
+        type: Sequelize.DATE
+      },
+      deletedAt: {
         type: Sequelize.DATE
       }
     });

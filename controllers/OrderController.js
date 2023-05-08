@@ -1,7 +1,13 @@
 const Order = require('../models').Order;
+const OrderDetail = require('../models').OrderDetail;
 const Payment = require('../models').Payment;
+const Product = require('../models').Product;
+const Cart = require('../models').Cart;
 
-const { validationResult } = require("express-validator");
+const {
+    validationResult
+} = require("express-validator");
+const order = require('../models/order');
 
 async function viewOrder(req, res) {
     const errors = validationResult(req);
@@ -15,26 +21,27 @@ async function viewOrder(req, res) {
         //Cari semua order dari user yg login
 
         result = await Order.findAll({
-            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
         }, {
             where: {
                 customerId: req.params.customerId
             }
         });
-    }
-    else {
+    } else {
         //Kalau di body ada codeOrder
         //Cari order itu saja
 
         result = await Order.findAll({
-            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
         }, {
             where: {
                 codeOrder: req.body.codeOrder
             }
         });
     }
-    return res.status(200).send({ order: result });
+    return res.status(200).send({
+        order: result
+    });
 }
 
 async function payOrder(req, res) {
@@ -44,7 +51,9 @@ async function payOrder(req, res) {
     }
 
     let result;
-    let { codeOrder } = req.body;
+    let {
+        codeOrder
+    } = req.body;
     // Ubah status di tabel payments untuk codeOrder
 
     await Payment.update({
@@ -65,7 +74,9 @@ async function payOrder(req, res) {
         }
     });
 
-    return res.status(200).send({ message: `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses` });
+    return res.status(200).send({
+        message: `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`
+    });
 }
 
 async function checkOut(req, res) {
@@ -74,27 +85,15 @@ async function checkOut(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let result;
-<<<<<<< Updated upstream
-    let { codeOrder } = req.body;
-
     //Ubah status di tabel order menjadi process
 
-    await Order.update({
-        statusOrder: 'pending'
-    }, {
-        where: {
-            codeOrder: codeOrder
-        }
-    });
 
-    let orderNow = Order.findOne({
-=======
-    let { courierJne,origin,destination,costCourier } = req.body;
+    //Pindah barang dari cart ke order
+    let { codeOrder,courierJne,origin,destination,costCourier } = req.body;
     let { customerId } = req.params;
 
     //Pindah barang dari cart ke order
-    let order = await Order.findAll();
+    let order = Order.findAll();
     let id = "OR";
     let panjang;
     if(order.length<10){
@@ -115,7 +114,7 @@ async function checkOut(req, res) {
     }
     id = id+panjang;
     
-    let cart = await Cart.findAll({
+    let cart = Cart.findAll({
         include: [{
             model: Product
         }],
@@ -142,29 +141,47 @@ async function checkOut(req, res) {
         weight : 5,
         costCourier : costCourier,
         subtotal : subtotal,
-        statusOrder : "PROCESS",
+        statusOrder : "PENDING",
         createdAt : new Date(),
         updatedAt : new Date()
     });
 
 
-    //Ubah status di tabel order menjadi process
+    //Tambah detail orders
 
-    let orderNow = await Order.findOne({
+    let orderDetails = await OrderDetail.findAll({
         include: [{
             model: Product
         }],
->>>>>>> Stashed changes
-        where: {
-            codeOrder: codeOrder
+        where : {
+            codeOrder : req.body.codeOrder
         }
     });
-
-    return res.status(200).send({ 
-        message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        nama_product : orderNow.nama
+    
+    let arrOrderDetails = [];
+    for (let i = 0; i < cart.length; i++) {
+        let orderDetails = await Order.create({
+            codeOrder : id,
+            codeProduct : cart[i].Product.codeProduct,
+            quantity : cart[i].quantity,
+            createdAt : new Date(),
+            updatedAt : new Date()
+        });
+        arrOrderDetails.push(orderDetails);
     }
-    );
+
+    //Update payment
+
+    return res.status(200).send({
+        message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
+        Asal : orderNow.origin,
+        Tujuan : orderNow.destination,
+        Layanan : orderNow.courierJne,
+        Ongkos_Kirim : orderNow.costCourier,
+        Status_Order : orderNow.statusOrder,
+        Daftar_Product: orderNow.Product.name,
+        daftar_product2: "ceritanya daftar produk... nanti semua produk dibuat jadi 1 array"
+    });
 }
 
 module.exports = {

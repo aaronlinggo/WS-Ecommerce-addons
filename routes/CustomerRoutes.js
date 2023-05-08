@@ -49,18 +49,7 @@ check("customerId").custom((value) => {
             return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
         }
     })
-<<<<<<< Updated upstream
-}),
-check("codeOrder").custom((value) => {
-    return Order.findOne({ where: { codeOrder : value } }).then((order) => {
-        if (!order) {
-            return Promise.reject("Order dengan Id tersebut tidak ditemukan");
-        }
-    })
-=======
->>>>>>> Stashed changes
 })
-,COrder.checkOut);
-
+,COrder.payOrder);
 
 module.exports = router;

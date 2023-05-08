@@ -2,48 +2,36 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Orders', {
-      codeOrder: {
+    await queryInterface.createTable('PaymentSubscriptions', {
+      codePayment: {
         allowNull: false,
         autoIncrement: false,
         primaryKey: true,
         type: Sequelize.STRING
       },
-      customerId: {
+      developerId: {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
-          model: 'customers',
+          model: 'developers',
           key: 'id'
         },
       },
-      courierJne: {
+      subscriptionId: {
         allowNull: false,
-        type: Sequelize.ENUM(['OKE','REG','SPS','YES'])
-      },
-      origin: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      destination: {
-        allowNull: false,
-        type: Sequelize.STRING
-      },
-      weight: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
-      costCourier: {
-        allowNull: false,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: 'subscriptions',
+          key: 'id'
+        },
       },
       subtotal: {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      statusOrder: {
+      paymentStatus: {
         allowNull: false,
-        type: Sequelize.ENUM(['PENDING', 'PROCESS', 'DELIVERED', 'CANCEL'])
+        type: Sequelize.ENUM(['paid', 'unpaid'])
       },
       createdAt: {
         allowNull: false,
@@ -56,6 +44,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Orders');
+    await queryInterface.dropTable('PaymentSubscriptions');
   }
 };

@@ -9,17 +9,18 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(developer) {
-      // Subscription.belongsTo(developer, {foreignKey: 'id'});
+    static associate(models) {
+      this.hasMany(models.Developer, {foreignKey: 'subscriptionId'});
+      this.hasMany(models.PaymentSubscription, {foreignKey: 'subscriptionId'});
     }
   }
   Subscription.init({
-    developerId: DataTypes.INTEGER,
-    expired: DataTypes.DATE,
-    paymentStatus: DataTypes.ENUM(['paid', 'unpaid'])
+    type: DataTypes.STRING,
+    price: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Subscription',
+    tableName: "subscriptions"
   });
   return Subscription;
 };

@@ -9,10 +9,13 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate(subscription, customers, products) {
-      // Developer.hasOne(subscription, {as: "subscription", foreignKey: 'developerId'});
-      // Developer.hasMany(customers, {as: "customers", foreignKey: 'developerId'});
-      // Developer.hasMany(products, {as: "products", foreignKey: 'developerId'});
+    static associate(models) {
+      this.hasMany(models.Product, {foreignKey: 'developerId'});
+      this.hasMany(models.Customer, {foreignKey: 'developerId'});
+      this.belongsTo(models.Subscription, {foreignKey: 'subscriptionId'});
+      this.hasMany(models.PaymentSubscription, {
+        foreignKey: 'developerId'
+      });
     }
   }
   Developer.init({
@@ -20,10 +23,14 @@ module.exports = (sequelize, DataTypes) => {
     lastName: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    username: DataTypes.STRING
+    username: DataTypes.STRING,
+    username: DataTypes.STRING,
+    subscriptionId: DataTypes.INTEGER,
+    expiredSubscription: DataTypes.DATE,
   }, {
     sequelize,
     modelName: 'Developer',
+    tableName: 'developers'
   });
   return Developer;
 };
