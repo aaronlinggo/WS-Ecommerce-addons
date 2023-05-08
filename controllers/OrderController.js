@@ -87,127 +87,341 @@ async function checkOut(req, res) {
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-
-    //Ubah status di tabel order menjadi process
-
-
-    //Pindah barang dari cart ke order
     let { courierJne, origin, destination } = req.body;
     let { customerId } = req.params;
 
-    //Buat id order
-    let order = await Order.findAll();
-    let id = "OR" + ((order.length + 1) + "").padStart(5, '0');
+    try {
+        //Buat id order
+        let order = await Order.findAll();
+        let id = "OR" + ((order.length + 1) + "").padStart(5, '0');
 
-    let cart = await Cart.findAll({
-        include: [{
-            model: Product
-        }],
-        where: {
-            customerId: customerId
+        let cart = await Cart.findAll({
+            include: [{
+                model: Product
+            }],
+            where: {
+                customerId: customerId
+            }
+        });
+
+        let subtotal = 0;
+        let totalWeight = 0;
+
+        if (cart.length == 0) {
+            //status 200? atau brp?
+            return res.status(200).send({ message: "Cart anda kosong, minimal terdapat 1 barang di cart!" });
         }
-    });
+        else {
+            for (let i = 0; i < cart.length; i++) {
+                subtotal += cart[i].Product.price * cart[i].quantity;
+                totalWeight += cart[i].Product.weight;
+            }
 
-    let subtotal = 0;
-    let totalWeight = 0;
+            const costResult = await axios.post(
+                "https://api.rajaongkir.com/starter/cost", {
+                "origin": origin,
+                "destination": destination,
+                "weight": totalWeight,
+                "courier": "jne"
+            },
+                {
+                    headers: {
+                        key: process.env.RAJAONGKIR_KEY,
+                    }
+                }
+            );
 
-    for (let i = 0; i < cart.length; i++) {
-        subtotal += cart[i].Product.price * cart[i].quantity;
-        totalWeight += cart[i].Product.weight;
+            var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
+                if (s.service == courierJne)
+                    return s
+            });
+
+            await Order.create({
+                codeOrder: id,
+                customerId: customerId,
+                courierJne: courierJne,
+                origin: origin,
+                destination: destination,
+                weight: totalWeight,
+                costCourier: servicesCourier.cost[0].value,
+                subtotal: subtotal,
+                statusOrder: "PENDING",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+
+            //Tambah detail orders
+
+            //Pindah barang dari cart ke order
+            let arrOrderDetails = [];
+            for (let i = 0; i < cart.length; i++) {
+                await OrderDetail.create({
+                    codeOrder: id,
+                    codeProduct: cart[i].Product.codeProduct,
+                    quantity: cart[i].quantity,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+                let newObj = {
+                    product_code: cart[i].Product.codeProduct,
+                    product_name: cart[i].Product.name,
+                    product_price: formatRupiah(cart[i].Product.price),
+                    product_quantity: cart[i].quantity,
+                    product_weight: cart[i].Product.weight,
+                    product_subtotal: formatRupiah(parseInt(cart[i].Product.price) * parseInt(cart[i].quantity)),
+                    product_weight_subtotal: parseInt(cart[i].Product.weight) * parseInt(cart[i].quantity)
+                }
+                arrOrderDetails.push(newObj);
+            }
+
+            //Hapus yang di cart
+            await Cart.destroy({
+                where: {
+                    customerId: customerId
+                }
+            });
+
+            //Bikin payment
+            let idPayment = "INVOICEORDER" + ((order.length + 1) + "").padStart(5, '0');
+
+            await Payment.create({
+                codePayment: idPayment,
+                codeOrder: id,
+                subtotal: subtotal,
+                paymentStatus: "unpaid",
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+            return res.status(200).send({
+                message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
+                asal: origin,
+                tujuan: destination,
+                // layanan: servicesCourier.cost[0].value,
+                layanan: courierJne,
+                berat: totalWeight,
+                ongkos_kirim: formatRupiah(servicesCourier.cost[0].value),
+                subtotal: formatRupiah(subtotal),
+                estimasi_sampai: servicesCourier.cost[0].etd,
+                total: formatRupiah(parseInt(servicesCourier.cost[0].value) + parseInt(subtotal)),
+                status_order: "PENDING",
+                daftar_product: arrOrderDetails,
+            });
+
+        }
+
+    } catch (e) {
+        return res.status(500).send({ message: e.toString() });
+    }
+}
+
+async function addToCart(req, res) {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
     }
 
-    const costResult = await axios.post(
-        "https://api.rajaongkir.com/starter/cost", {
-        "origin": origin,
-        "destination": destination,
-        "weight": totalWeight,
-        "courier": "jne"
-    },
-        {
-            headers: {
-                key: process.env.RAJAONGKIR_KEY,
+    let { quantity, codeProduct, nameProduct } = req.body;
+    let { customerId } = req.params;
+
+    if(!req.body){
+
+    }
+
+    try {
+
+        //result
+        let isiCart=[];
+
+        let panjangQty = quantity.split(",");
+        // return res.status(400).send(panjangQty[1]);
+        if(req.body.codeProduct){
+            let panjangCode = codeProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if(panjangCode.length!=panjangQty.length){
+                return res.status(400).send({message : "Panjang quantity dan panjang codeProduct tidak sama!"});
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangCode.length; i++) {
+                let cekCode = await Product.findOne({
+                    where : {
+                        codeProduct : panjangCode[i]
+                    }
+                });    
+                //Cek codeProduct benar ada gak 
+                if(!cekCode){
+                    return res.status(404).send({message : `Produk dengan code ${panjangCode[i]} tidak ditemukan`});
+                }
+                //Cek stok cukup gak
+                if(quantity[i]>cekCode.stock){
+                    return res.status(400).send({message : `Stok ${panjangCode[i]} hanya terdapat ${cekCode.stock}`});
+                }
+            }     
+
+            //Masukin Cart
+            for (let i = 0; i < panjangCode.length; i++) {
+                let cekCode = await Product.findOne({
+                    where : {
+                        codeProduct : panjangCode[i]
+                    }
+                });    
+                let cekInCart = await Cart.findOne({
+                    where :{
+                        customerId : customerId,
+                        codeProduct : codeProduct
+                    }
+                });
+                //Cek barang sudah masuk cart gk
+                //Kalau blm insert 
+                if(!cekInCart){
+                    await Cart.create({
+                        customerId : customerId,
+                        codeProduct : panjangCode[i],
+                        quantity : panjangQty[i],
+                        createdAt : new Date(),
+                        updatedAt : new Date()
+                    });    
+                }
+                //Kalau sdh update
+                else{                    
+                    await Cart.update({
+                        quantity : (cekInCart.quantity+parseInt(panjangQty[i])),
+                        updatedAt : new Date()
+                    },{
+                        where : {
+                            customerId : customerId,
+                            codeProduct : panjangCode[i]
+                        }
+                    });    
+                }
+                let produkNow = await Product.findOne({
+                    where : {
+                        codeProduct : panjangCode[i]
+                    }
+                });    
+                let newObj = {
+                    product_code : produkNow.codeProduct,
+                    product_name : produkNow.name,
+                    product_price : formatRupiah(produkNow.price),
+                    product_weight : produkNow.weight,
+                    quantity : panjangQty[i],
+                    subtotal : formatRupiah(parseInt(produkNow.price)*parseInt(panjangQty[i])),
+                    subtotal_weight : (parseInt(produkNow.weight)*parseInt(panjangQty[i]))
+                }
+                isiCart.push(newObj);
+                //Kurangi stok
+                await Product.update({
+                    stock : (parseInt(cekCode.stock)-parseInt(panjangQty[i]))
+                },{
+                    where : {
+                        codeProduct : cekCode.codeProduct
+                    }
+                });                
             }
         }
-    );
+        if(req.body.nameProduct){
+            let panjangNama = nameProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if(panjangNama.length!=panjangQty.length){
+                return res.status(400).send({message : "Panjang quantity dan panjang nameProduct tidak sama!"});
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangNama.length; i++) {
+                let cekCode = await Product.findOne({
+                    where : {
+                        name : panjangNama[i]
+                    }
+                });    
+                //Cek codeProduct benar ada gak 
+                if(!cekCode){
+                    return res.status(404).send({message : `Produk dengan nama ${panjangNama[i]} tidak ditemukan`});
+                }
+                //Cek stok cukup gak
+                if(quantity[i]>cekCode.stock){
+                    return res.status(400).send({message : `Stok ${panjangNama[i]} hanya terdapat ${cekCode.stock}`});
+                }
+            } 
+            //Masukin ke cart
+            for (let i = 0; i < panjangNama.length; i++) {
+                let cekCode = await Product.findOne({
+                    where : {
+                        name : panjangNama[i]
+                    }
+                });   
+                let cekInCart = await Cart.findOne({
+                    where :{
+                        customerId : customerId,
+                        codeProduct : cekCode.codeProduct
+                    }
+                });
+                //Cek barang sudah masuk cart gk
+                //Kalau blm insert    
+                if(!cekInCart){
+                    await Cart.create({
+                        customerId : customerId,
+                        codeProduct : cekCode.codeProduct,
+                        quantity : panjangQty[i],
+                        createdAt : new Date(),
+                        updatedAt : new Date()
+                    });    
+                }
+                //Kalau sdh update
+                else{        
+                    await Cart.update({
+                        quantity : (cekInCart.quantity+parseInt(panjangQty[i])),
+                        updatedAt : new Date()
+                    },{
+                        where : {
+                            customerId : customerId,
+                            codeProduct : cekCode.codeProduct
+                        }
+                    });    
+                }
+                
+                let produkNow = await Product.findOne({
+                    where : {
+                        name : panjangNama[i]
+                    }
+                });    
+                let newObj = {
+                    product_code : produkNow.codeProduct,
+                    product_name : produkNow.name,
+                    product_price : formatRupiah(produkNow.price),
+                    product_weight : produkNow.weight,
+                    quantity : panjangQty[i],
+                    subtotal : formatRupiah(parseInt(produkNow.price)*parseInt(panjangQty[i])),
+                    subtotal_weight : (parseInt(produkNow.weight)*parseInt(panjangQty[i]))
+                }
+                isiCart.push(newObj);   
+                //Kurangi stok
+                await Product.update({
+                    stock : (parseInt(cekCode.stock)-parseInt(panjangQty[i]))
+                },{
+                    where : {
+                        codeProduct : cekCode.codeProduct
+                    }
+                });
+                
+            }    
+        }
 
-    var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
-        if (s.service == courierJne)
-            return s
-    });
-
-    await Order.create({
-        codeOrder: id,
-        customerId: customerId,
-        courierJne: courierJne,
-        origin: origin,
-        destination: destination,
-        weight: totalWeight,
-        costCourier: servicesCourier.cost[0].value,
-        subtotal: subtotal,
-        statusOrder: "PENDING",
-        createdAt: new Date(),
-        updatedAt: new Date()
-    });
-
-
-    //Tambah detail orders
-
-    //Pindah barang dari cart ke order
-    let arrOrderDetails = [];
-    for (let i = 0; i < cart.length; i++) {
-        let orderDetails = await OrderDetail.create({
-            codeOrder: id,
-            codeProduct: cart[i].Product.codeProduct,
-            quantity: cart[i].quantity,
-            createdAt: new Date(),
-            updatedAt: new Date()
+        return res.status(200).send({
+            message: `Barang berhasil dimasukkan ke dalam cart`,
+            new_item : isiCart
         });
-        let newObj = {
-            product_code : cart[i].Product.codeProduct,
-            product_name : cart[i].Product.name,
-            product_price : formatRupiah(cart[i].Product.price),
-            product_quantity : cart[i].quantity,
-            product_subtotal : formatRupiah(parseInt(cart[i].Product.price)*parseInt(cart[i].quantity))
-        }
-        arrOrderDetails.push(newObj);
+    } catch (e) {
+
+
+        return res.status(500).send({
+            message: e.toString()
+        });
     }
-
-    //Hapus yang di cart
-    await Cart.destroy({
-        where: {
-            customerId: customerId
-        }
-    });
-
-    //Bikin payment
-    let idPayment = "INVOICEORDER" + ((order.length + 1) + "").padStart(5, '0');
-
-    await Payment.create({
-        codePayment: idPayment,
-        codeOrder: id,
-        subtotal: subtotal,
-        paymentStatus: "unpaid",
-        createdAt: new Date(),
-        updatedAt: new Date()
-    });
-
-    return res.status(200).send({
-        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
-        asal : origin,
-        tujuan : destination,
-        layanan : servicesCourier.cost[0].value,
-        berat: totalWeight,
-        ongkos_kirim : formatRupiah(servicesCourier.cost[0].value),
-        subtotal : formatRupiah(subtotal),
-        estimasi_sampai: servicesCourier.cost[0].etd,
-        total : formatRupiah(parseInt(servicesCourier.cost[0].value)+parseInt(subtotal)),
-        status_order : "PENDING",
-        daftar_product: arrOrderDetails,
-    });
 }
 
 module.exports = {
     viewOrder,
     payOrder,
-    checkOut
+    checkOut,
+    addToCart
 }
