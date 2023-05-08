@@ -12,7 +12,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "customerId"
       });
       this.hasOne(models.Payment, { foreignKey: "codePayment" });
-      this.hasOne(models.Review, { foreignKey: "codeOrder" });
       this.hasMany(models.OrderDetail, { foreignKey: "codeOrder" });
     }
   }
