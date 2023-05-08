@@ -17,12 +17,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Cart.init({
-    customerId: DataTypes.STRING,
+    customerId: DataTypes.INTEGER,
     codeProduct: DataTypes.STRING,
     quantity: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'Cart',
+    tableName: 'cart',
   });
   return Cart;
 };

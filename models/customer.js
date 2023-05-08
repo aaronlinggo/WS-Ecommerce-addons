@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
       this.belongsTo(models.Developer, {foreignKey: 'id'});
       this.hasMany(models.Order, {foreignKey: 'customerId'});
       this.hasMany(models.Review, {foreignKey: 'customerId'});
+      this.hasMany(models.Cart, {foreignKey : 'customerId'});
     }
   }
   Customer.init({

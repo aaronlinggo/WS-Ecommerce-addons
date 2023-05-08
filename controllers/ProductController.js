@@ -14,9 +14,14 @@ const getAll = async (req, res) => {
     var namaprod = req.params.nama; //buat search
     var ascdescprice = req.query.price;
     var ascdescstock = req.query.stock;
+    //pagination
+    var page = parseFloat(req.query.page);
+    var pageSize = parseFloat(req.query.pageSize);
+    var offset = (page - 1) * pageSize;
+    console.log(page + '-' + pageSize + '- ' + offset);
     if (namaprod) {
         let product = await Product.findOne({
-            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
             include: [{
                 model: Developer,
                 attributes: [
@@ -32,6 +37,7 @@ const getAll = async (req, res) => {
             "Product Code": product.codeProduct,
             "Name": product.name,
             "Price": product.price,
+            "Weight": product.weight,
             "Photo": product.photo,
             "Stock": product.stock,
             "Description": product.description,
@@ -40,7 +46,7 @@ const getAll = async (req, res) => {
         return res.status(200).send(hasil);
     } else {
         let products = await Product.findAll({
-            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
             include: [{
                 model: Developer,
                 attributes: [
@@ -49,12 +55,14 @@ const getAll = async (req, res) => {
             }],
             where: {
                 developerId: dev.id
-            }
+            },
+            limit: pageSize,
+            offset: offset
         });
         if (ascdescprice) {
             if (ascdescprice.toUpperCase() == "ASC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -70,7 +78,7 @@ const getAll = async (req, res) => {
                 });
             } else if (ascdescprice.toUpperCase() == "DESC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -90,7 +98,7 @@ const getAll = async (req, res) => {
         if (ascdescstock) {
             if (ascdescstock.toUpperCase() == "ASC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -106,7 +114,7 @@ const getAll = async (req, res) => {
                 });
             } else if (ascdescstock.toUpperCase() == "DESC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -127,6 +135,7 @@ const getAll = async (req, res) => {
                 "Product Code": p.codeProduct,
                 "Name": p.name,
                 "Price": formatRupiah(p.price),
+                "Weight": p.weight + " gram",
                 "Photo": p.photo,
                 "Stock": p.stock,
                 "Description": p.description,
@@ -146,11 +155,12 @@ const addProduct = async (req, res) => {
     var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
+    var weight = req.body.weight;
     let products = await Product.findOne({
         order: [
             ["codeProduct", "DESC"]
         ],
-        limit: 1
+        limit: 1,
     });
     var temp = products.codeProduct;
     var angkaterakhir = parseInt(temp.slice(4, 9));
@@ -162,6 +172,7 @@ const addProduct = async (req, res) => {
         developerId: dev.id,
         name: name,
         price: price,
+        weight: weight,
         photo: path,
         stock: stock,
         description: description
@@ -171,6 +182,7 @@ const addProduct = async (req, res) => {
         "ID Developer": dev.id,
         "Name": name,
         "Price": formatRupiah(price),
+        "Weight": weight+" gram",
         "Photo": path,
         "Stock": stock,
         "Description": description
@@ -184,6 +196,7 @@ const editProduct = async (req, res) => {
     var codeProduct = req.params.id;
     var name = req.body.name;
     var price = req.body.price;
+    var weight = req.body.weight;
     var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
@@ -202,17 +215,19 @@ const editProduct = async (req, res) => {
     await Product.update({
         name: name,
         price: price,
+        weight: weight,
         photo: path,
         stock: stock,
         description: description
     }, {
         where: {
-            codeProduct: codeProduct
+            codeProduct: codeProduct,
+            developerId: dev.id
         }
     });
 
     product = await Product.findOne({
-        attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+        attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
         include: [{
             model: Developer,
             attributes: [
@@ -220,7 +235,8 @@ const editProduct = async (req, res) => {
             ]
         }],
         where: {
-            codeProduct: codeProduct
+            codeProduct: codeProduct,
+            developerId: dev.id
         }
     });
     let editedProduct = {
@@ -228,6 +244,7 @@ const editProduct = async (req, res) => {
         "Developer": product["Developer"]["dataValues"]["developer_name"],
         "Name": name,
         "Price": formatRupiah(price),
+        "Weight": weight + " gram",
         "Photo": product.photo,
         "Stock": stock,
         "Description": description
@@ -242,14 +259,16 @@ const deleteProduct = async (req, res) => {
     let product = await Product.findOne({
         attributes: ['photo'],
         where: {
-            codeProduct: codeProduct
+            codeProduct: codeProduct,
+            developerId: dev.id
         }
     });
     let namafile = product.photo;
-    fs.unlinkSync('.' + namafile);
+    // fs.unlinkSync('.' + namafile);
     await Product.destroy({
         where: {
-            codeProduct: codeProduct
+            codeProduct: codeProduct,
+            developerId: dev.id
         }
     });
     var hasil = {
@@ -263,7 +282,7 @@ const getDetailProduct = async (req, res) => {
     dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     let product = await Product.findOne({
-        attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+        attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
         include: [{
             model: Developer,
             attributes: [
@@ -275,19 +294,25 @@ const getDetailProduct = async (req, res) => {
             developerId: dev.id
         }
     });
+    if(product.length<=0)
+    {
+        var hasil = {
+            message: "Product Not Found!"
+        }
+        return res.status(404).send(hasil);
+    }
     var hasil = {
         "Product Code": product.codeProduct,
         "Developer": product["Developer"]["dataValues"]["developer_name"],
         "Name": product.name,
         "Price": formatRupiah(product.price),
+        "Weight": product.weight + " gram",
         "Photo": product.photo,
         "Stock": product.stock,
         "Description": product.description
     };
     return res.status(200).send(hasil);
 }
-
-
 
 module.exports = {
     getAll,

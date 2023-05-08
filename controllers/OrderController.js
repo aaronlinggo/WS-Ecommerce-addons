@@ -1,6 +1,8 @@
 const Order = require('../models').Order;
+const OrderDetail = require('../models').OrderDetail;
 const Payment = require('../models').Payment;
 const Product = require('../models').Product;
+const Cart = require('../models').Cart;
 
 const {
     validationResult
@@ -19,7 +21,7 @@ async function viewOrder(req, res) {
         //Cari semua order dari user yg login
 
         result = await Order.findAll({
-            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
         }, {
             where: {
                 customerId: req.params.customerId
@@ -30,7 +32,7 @@ async function viewOrder(req, res) {
         //Cari order itu saja
 
         result = await Order.findAll({
-            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
         }, {
             where: {
                 codeOrder: req.body.codeOrder
@@ -84,9 +86,59 @@ async function checkOut(req, res) {
     }
 
     let result;
-    let {
-        codeOrder
-    } = req.body;
+    let { codeOrder,courierJne,origin,destination,costCourier } = req.body;
+    let { customerId } = req.params;
+
+    //Pindah barang dari cart ke order
+    let order = Order.findAll();
+    let id = "OR";
+    let panjang;
+    if(order.length<10){
+        panjang="0000"+order.length+1;
+    }
+    else if(order.length<100){
+        panjang="000"+order.length+1;
+    }
+    else if(order.length<1000){
+        panjang="00"+order.length+1;
+
+    }
+    else if(order.length<10000){
+        panjang="0"+order.length+1;
+    }
+    else if(order.length<100000){
+        panjang=order.length+1;
+    }
+    id = id+panjang;
+    
+    let cart = Cart.findAll({
+        include: [{
+            model: Product
+        }],
+        where :{
+            customerId : customerId
+        }
+    });
+
+    
+
+    let subtotal=0;
+
+    for (let i = 0; i < cart.length; i++) {
+        subtotal+=cart[i].Product.price * cart[i].quantity;
+    }
+
+    await Order.create({
+        codeOrder : id,
+        customerId : customerId,
+        courierJne : courierJne,
+        origin : origin,
+        destination : destination,
+        weight : 5,
+        costCourier : costCourier,
+        subtotal
+    });
+
 
     //Ubah status di tabel order menjadi process
 
@@ -107,14 +159,23 @@ async function checkOut(req, res) {
         }
     });
 
+    let orderDetails = await OrderDetail.findAll({
+        include: [{
+            model: Product
+        }],
+        where : {
+            codeOrder : req.body.codeOrder
+        }
+    });
+
     return res.status(200).send({
         message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        asal : orderNow.origin,
-        tujuan : orderNow.destination,
-        layanan : orderNow.courierJne,
-        ongkos_kirim : orderNow.costCourier,
-        statusOrder : orderNow.statusOrder,
-        daftar_product: orderNow.Product.name,
+        Asal : orderNow.origin,
+        Tujuan : orderNow.destination,
+        Layanan : orderNow.courierJne,
+        Ongkos_Kirim : orderNow.costCourier,
+        Status_Order : orderNow.statusOrder,
+        Daftar_Product: orderNow.Product.name,
         daftar_product2: "ceritanya daftar produk... nanti semua produk dibuat jadi 1 array"
     });
 }
