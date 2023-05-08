@@ -14,6 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Payment.init({
+    codePayment: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+    },
     codeOrder: DataTypes.STRING,
     subtotal: DataTypes.INTEGER,
     paymentStatus: DataTypes.ENUM(['paid', 'unpaid'])
