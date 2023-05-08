@@ -12,8 +12,10 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       this.hasMany(models.Product, {foreignKey: 'developerId'});
       this.hasMany(models.Customer, {foreignKey: 'developerId'});
-      this.belongsTo(models.Subscription, {foreignKey: 'id'});
-      this.hasMany(models.PaymentSubscription, {foreignKey: 'id'});
+      this.belongsTo(models.Subscription, {foreignKey: 'subscriptionId'});
+      this.hasMany(models.PaymentSubscription, {
+        foreignKey: 'developerId'
+      });
     }
   }
   Developer.init({

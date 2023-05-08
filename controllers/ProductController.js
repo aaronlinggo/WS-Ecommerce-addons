@@ -7,30 +7,135 @@ const Product = require('../models').Product;
 const formatRupiah = require("../helpers/formatRupiah");
 const Developer = require('../models').Developer;
 const fs = require("fs");
-const developer = require('../models/developer');
 
 const getAll = async (req, res) => {
-    let products = await Product.findAll({
-        attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
-        include: [{
-            model: Developer,
-            attributes: [
-                [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
-            ]
-        }]
-    });
-    products = products.map(p => {
-        return {
-            "Product Code": p.codeProduct,
-            "Name": p.name,
-            "Price": formatRupiah(p.price),
-            "Photo": p.photo,
-            "Stock": p.stock,
-            "Description": p.description,
-            "Developer Name": p["Developer"]["dataValues"]["developer_name"]
-        };
-    })
-    return res.status(200).send(products);
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
+    var namaprod = req.params.nama; //buat search
+    var ascdescprice = req.query.price;
+    var ascdescstock = req.query.stock;
+    if (namaprod) {
+        let product = await Product.findOne({
+            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            include: [{
+                model: Developer,
+                attributes: [
+                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                ]
+            }],
+            where: {
+                developerId: dev.id,
+                name: namaprod
+            }
+        });
+        var hasil = {
+            "Product Code": product.codeProduct,
+            "Name": product.name,
+            "Price": product.price,
+            "Photo": product.photo,
+            "Stock": product.stock,
+            "Description": product.description,
+            "Developer Name": product["Developer"]["dataValues"]["developer_name"]
+        }
+        return res.status(200).send(hasil);
+    } else {
+        let products = await Product.findAll({
+            attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+            include: [{
+                model: Developer,
+                attributes: [
+                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                ]
+            }],
+            where: {
+                developerId: dev.id
+            }
+        });
+        if (ascdescprice) {
+            if (ascdescprice.toUpperCase() == "ASC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['price', 'ASC']
+                    ]
+                });
+            } else if (ascdescprice.toUpperCase() == "DESC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['price', 'DESC']
+                    ]
+                });
+            }
+        }
+
+        if (ascdescstock) {
+            if (ascdescstock.toUpperCase() == "ASC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['stock', 'ASC']
+                    ]
+                });
+            } else if (ascdescstock.toUpperCase() == "DESC") {
+                products = await Product.findAll({
+                    attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['stock', 'DESC']
+                    ]
+                });
+            }
+        }
+        products = products.map(p => {
+            return {
+                "Product Code": p.codeProduct,
+                "Name": p.name,
+                "Price": formatRupiah(p.price),
+                "Photo": p.photo,
+                "Stock": p.stock,
+                "Description": p.description,
+                "Developer Name": p["Developer"]["dataValues"]["developer_name"]
+            };
+        })
+        return res.status(200).send(products);
+    }
+
 }
 
 const addProduct = async (req, res) => {
@@ -41,14 +146,23 @@ const addProduct = async (req, res) => {
     var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
-    let products = await Product.findAll();
-    var code = "WSEC" + ((products.length + 1) + "").padStart(5, '0');
+    let products = await Product.findOne({
+        order: [
+            ["codeProduct", "DESC"]
+        ],
+        limit: 1
+    });
+    var temp = products.codeProduct;
+    var angkaterakhir = parseInt(temp.slice(4, 9));
+    var code = "WSEC" + ((angkaterakhir + 1) + "").padStart(5, '0');
+    var namafilephoto = photo.originalname;
+    var path = "/storage/" + dev.username + "/" + namafilephoto;
     var newProduct = await Product.create({
         codeProduct: code,
         developerId: dev.id,
         name: name,
         price: price,
-        photo: photo.originalname,
+        photo: path,
         stock: stock,
         description: description
     });
@@ -57,7 +171,7 @@ const addProduct = async (req, res) => {
         "ID Developer": dev.id,
         "Name": name,
         "Price": formatRupiah(price),
-        "Photo": photo.originalname,
+        "Photo": path,
         "Stock": stock,
         "Description": description
     };
@@ -65,6 +179,8 @@ const addProduct = async (req, res) => {
 }
 
 const editProduct = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     var name = req.body.name;
     var price = req.body.price;
@@ -72,20 +188,21 @@ const editProduct = async (req, res) => {
     var stock = req.body.stock;
     var description = req.body.description;
     var photos = photo.originalname;
+    var path = "/storage/" + dev.username + "/" + photos;
     let product = await Product.findOne({
         attributes: ['photo'],
         where: {
             codeProduct: codeProduct
         }
     });
-    
+
     let namafile = product.photo;
-    fs.unlinkSync('./assets/' + namafile);
+    fs.unlinkSync('.' + namafile);
 
     await Product.update({
         name: name,
         price: price,
-        photo: photos,
+        photo: path,
         stock: stock,
         description: description
     }, {
@@ -93,6 +210,7 @@ const editProduct = async (req, res) => {
             codeProduct: codeProduct
         }
     });
+
     product = await Product.findOne({
         attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
         include: [{
@@ -110,7 +228,7 @@ const editProduct = async (req, res) => {
         "Developer": product["Developer"]["dataValues"]["developer_name"],
         "Name": name,
         "Price": formatRupiah(price),
-        "Photo": photo.originalname,
+        "Photo": product.photo,
         "Stock": stock,
         "Description": description
     };
@@ -118,6 +236,8 @@ const editProduct = async (req, res) => {
 }
 
 const deleteProduct = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     let product = await Product.findOne({
         attributes: ['photo'],
@@ -126,7 +246,7 @@ const deleteProduct = async (req, res) => {
         }
     });
     let namafile = product.photo;
-    fs.unlinkSync('./assets/' + namafile);
+    fs.unlinkSync('.' + namafile);
     await Product.destroy({
         where: {
             codeProduct: codeProduct
@@ -139,6 +259,8 @@ const deleteProduct = async (req, res) => {
 }
 
 const getDetailProduct = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     let product = await Product.findOne({
         attributes: ['codeProduct', 'name', 'price', 'photo', 'stock', 'description'],
@@ -149,7 +271,8 @@ const getDetailProduct = async (req, res) => {
             ]
         }],
         where: {
-            codeProduct: codeProduct
+            codeProduct: codeProduct,
+            developerId: dev.id
         }
     });
     var hasil = {

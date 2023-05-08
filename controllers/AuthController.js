@@ -1,12 +1,16 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require('bcrypt');
 require("dotenv").config();
-
 const Customer = require('../models').Customer;
 const Developer = require('../models').Developer;
+const Subscription = require('../models').Subscription;
+var moment = require('moment');
 const {
     Op
 } = require('sequelize');
+const {
+    sequelize
+} = require('../models');
 
 const RegisterDeveloper = async (req, res) => {
     const {
@@ -69,7 +73,13 @@ const LoginDeveloper = async (req, res) => {
     } = req.body;
 
     let dev = await Developer.findOne({
-        attributes: ["id", "username", "password", "email"],
+        attributes: ["id", "username", "password", "email", "subscriptionId", [sequelize.fn('date', sequelize.col('expiredSubscription')), 'expiredSubscription']],
+        include: [{
+            model: Subscription,
+            attributes: [
+                "type"
+            ]
+        }],
         where: {
             username: username
         },
@@ -84,7 +94,9 @@ const LoginDeveloper = async (req, res) => {
             var token = jwt.sign({
                 "id": dev.dataValues.id,
                 "username": dev.dataValues.username,
-                "email": dev.dataValues.email
+                "email": dev.dataValues.email,
+                "subscription": dev.Subscription.dataValues.type,
+                "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
             },
                 process.env.JWT_KEY, {
                 expiresIn: '500m'
