@@ -22,7 +22,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         primaryKey: true,
       },
-      quantity: DataTypes.INTEGER,
       customerId: DataTypes.INTEGER,
       courierJne: DataTypes.ENUM(["OKE", "REG", "SPS", "YES"]),
       origin: DataTypes.STRING,
