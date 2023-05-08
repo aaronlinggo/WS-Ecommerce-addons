@@ -109,7 +109,13 @@ async function checkOut(req, res) {
 
     return res.status(200).send({
         message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        nama_product: orderNow
+        asal : orderNow.origin,
+        tujuan : orderNow.destination,
+        layanan : orderNow.courierJne,
+        ongkos_kirim : orderNow.costCourier,
+        statusOrder : orderNow.statusOrder,
+        daftar_product: orderNow.Product.name,
+        daftar_product2: "ceritanya daftar produk... nanti semua produk dibuat jadi 1 array"
     });
 }
 
