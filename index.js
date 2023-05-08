@@ -31,7 +31,7 @@ app.use("/api/customer", customer);
 app.use("/api/order", order);
 app.use("/api/product", product);
 app.use("/api/review", review);
-app.use("/api/order_routes", order_routes);
+app.use("/api/orderRoutes", order_routes);
 app.use("/api/subscription", subscription);
 
 cron.schedule('0 0 * * *', async function () {
