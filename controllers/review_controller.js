@@ -1,6 +1,6 @@
-const { Review, Order, Customer } = require('../models');
+const { Review, Order, Customer, Product } = require('../models');
 
-// NOMOR 10 -> done, maybe?
+// NOMOR 10
 const seeAllReview = async (req, res) => {
   let data_all_review = await Review.findAll({
     include: [
@@ -25,8 +25,8 @@ const seeAllReview = async (req, res) => {
     status: 200,
     body: data_all_review.map((review) => ({
       'Customer Name': review.Customer.firstName + ' ' + review.Customer.lastName,
-      'Product Name': review.Product.name,
-      'Product Price': review.Product.price,
+      'Product Name': review.Order.Product.name,
+      'Product Price': review.Order.Product.price,
       'Courier JNE': review.Order.courierJne,
       'Review': {
         'Rating': review.rating,
