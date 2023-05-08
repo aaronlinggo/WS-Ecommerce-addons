@@ -85,14 +85,10 @@ async function checkOut(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    //Ubah status di tabel order menjadi process
-
-
-    //Pindah barang dari cart ke order
     let { courierJne,origin,destination,costCourier } = req.body;
     let { customerId } = req.params;
 
-    //Pindah barang dari cart ke order
+    //Buat id order
     let order = await Order.findAll();
     let id = "OR"+ ((order.length + 1) + "").padStart(5, '0');   
     
@@ -107,19 +103,22 @@ async function checkOut(req, res) {
 
 
     let subtotal=0;    
+    let totalWeight = 0;
 
-
+    //Total Weight dan Subtotal
     for (let i = 0; i < cart.length; i++) {
         subtotal+=cart[i].Product.price * cart[i].quantity;
+        totalWeight+=cart[i].Product.weight*cart[i].quantity;
     }
-    //wEIGHT MASIH PATEN
+
+    //Buat header order
     await Order.create({
         codeOrder : id,
         customerId : customerId,
         courierJne : courierJne,
         origin : origin,
         destination : destination,
-        weight : 5,
+        weight : totalWeight,
         costCourier : costCourier,
         subtotal : subtotal,
         statusOrder : "PENDING",
@@ -130,6 +129,7 @@ async function checkOut(req, res) {
 
     //Tambah detail orders
 
+    //Pindah barang dari cart ke order
     let arrOrderDetails = [];
     for (let i = 0; i < cart.length; i++) {
         let orderDetails = await OrderDetail.create({
@@ -148,7 +148,7 @@ async function checkOut(req, res) {
         arrOrderDetails.push(newObj);
     }
 
-    //Hapus yang dari cart
+    //Hapus yang di cart
     await Cart.destroy({
         where : {
             customerId : customerId
@@ -168,7 +168,7 @@ async function checkOut(req, res) {
     });
 
     return res.status(200).send({
-        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status `,
+        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
         asal : origin,
         tujuan : destination,
         layanan : courierJne,
