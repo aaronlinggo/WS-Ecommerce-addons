@@ -2,7 +2,13 @@ const { Review, Order, Customer, Product, OrderDetail } = require('../models');
 
 // NOMOR 10
 const seeAllReview = async (req, res) => {
-  let data_all_review = await Review.findAll();
+  let data_all_review = await Review.findAll({
+    include: [
+      {
+        model: OrderDetail,
+      }
+    ]
+  });
 
   // const output = {
   //   status: 200,
