@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   Review.init({
-    codeOrder: DataTypes.STRING,
+    codeOrderDetail: DataTypes.STRING,
     rating: DataTypes.ENUM(['1','2','3','4','5']),
     customerId: DataTypes.INTEGER,
     comment: DataTypes.TEXT

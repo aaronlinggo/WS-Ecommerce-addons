@@ -12,18 +12,19 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    await queryInterface.bulkInsert('Reviews', [
+
+    await queryInterface.bulkInsert('reviews', [
       {
-        codeOrder: 'OR001',
-        rating: 3,
+        codeOrderDetail: 1,
+        rating: '3',
         customerId: 1,
-        comment: 'awokwokwok'
+        comment: 'gdshfsgh'
       },
       {
-        codeOrder: 'OR002',
-        rating: 2,
+        codeOrderDetail: 2,
+        rating: '3',
         customerId: 2,
-        comment: 'testetstets'
+        comment: 'jasndjnaj'
       },
     ]);
   },

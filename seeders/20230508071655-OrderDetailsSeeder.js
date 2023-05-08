@@ -12,12 +12,17 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
-    
-    await queryInterface.bulkInsert('Payments', [
+
+    await queryInterface.bulkInsert('orderdetails', [
       {
         codeOrder: 'OR00001',
-        subtotal: 999000,
-        paymentStatus: 'UNPAID',
+        codeProduct: 'WSEC00001',
+        quantity: 1
+      },
+      {
+        codeOrder: 'OR00002',
+        codeProduct: 'WSEC00002',
+        quantity: 1
       },
     ]);
   },
