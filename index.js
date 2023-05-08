@@ -13,7 +13,7 @@ const {
 const customer = require("./routes/CustomerRoutes");
 const order = require("./routes/OrderRoutes");
 const product = require("./routes/ProductRoutes");
-const review = require("./routes/review_routes");
+const review_routes = require("./routes/review_routes");
 const order_routes = require("./routes/order_routes");
 const subscription = require("./routes/SubscriptionRoutes");
 
@@ -30,7 +30,7 @@ app.use("/api/auth", auth);
 app.use("/api/customer", customer);
 app.use("/api/order", order);
 app.use("/api/product", product);
-app.use("/api/review", review);
+app.use("/api/reviewRoutes", review_routes);
 app.use("/api/orderRoutes", order_routes);
 app.use("/api/subscription", subscription);
 

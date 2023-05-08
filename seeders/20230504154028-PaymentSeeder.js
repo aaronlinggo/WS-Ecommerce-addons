@@ -12,6 +12,13 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
+    await queryInterface.bulkInsert('Payments', [
+      {
+        codeOrder: 'OR001',
+        subtotal: 999000,
+        paymentStatus: 'UNPAID',
+      },
+    ]);
   },
 
   async down (queryInterface, Sequelize) {
