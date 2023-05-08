@@ -38,7 +38,24 @@ check("codeOrder").custom((value) => {
         }
     })
 })
-,COrder.viewOrder);
+,COrder.payOrder);
+
+router.post("/order/checkOut/:customerId",
+check("customerId").custom((value) => {
+    return Customer.findOne({ where: { id: value } }).then((user) => {
+        if (!user) {
+            return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+        }
+    })
+}),
+check("codeOrder").custom((value) => {
+    return Order.findOne({ where: { codeOrder: value } }).then((user) => {
+        if (!user) {
+            return Promise.reject("Order dengan Id tersebut tidak ditemukan");
+        }
+    })
+})
+,COrder.checkOut);
 
 
 module.exports = router;
