@@ -24,8 +24,7 @@ check("customerId").custom((value) => {
 })
 ,COrder.viewOrder);
 
-//PUT
-router.put("/order/payOrder/:customerId",
+router.post("/order/payOrder/:customerId",
 check("customerId").custom((value) => {
     return Customer.findOne({ where: { id: value } }).then((user) => {
         if (!user) {
@@ -41,6 +40,24 @@ check("codeOrder").custom((value) => {
     })
 })
 ,COrder.payOrder);
+
+
+router.post("/order/checkout/:customerId",
+check("customerId").custom((value) => {
+    return Customer.findOne({ where: { id: value } }).then((user) => {
+        if (!user) {
+            return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+        }
+    })
+}),
+check("codeOrder").custom((value) => {
+    return Order.findOne({ where: { codeOrder : value } }).then((order) => {
+        if (!order) {
+            return Promise.reject("Order dengan Id tersebut tidak ditemukan");
+        }
+    })
+})
+,COrder.checkOut);
 
 
 module.exports = router;

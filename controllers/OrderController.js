@@ -5,89 +5,99 @@ const { validationResult } = require("express-validator");
 
 async function viewOrder(req, res) {
     const errors = validationResult(req);
-    if (!errors.isEmpty()){
+    if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
 
     let result;
-    if(!req.body.codeOrder){
+    if (!req.body.codeOrder) {
         //Kalau di body gk ada codeOrder
         //Cari semua order dari user yg login
 
         result = await Order.findAll({
-            attributes:['codeOrder','quantity','origin','destination','courierJne','costCourier']
-        },{
-            where : {
-                customerId : req.params.customerId
+            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+        }, {
+            where: {
+                customerId: req.params.customerId
             }
         });
     }
-    else{
+    else {
         //Kalau di body ada codeOrder
         //Cari order itu saja
-        
+
         result = await Order.findAll({
-            attributes:['codeOrder','quantity','origin','destination','courierJne','costCourier']
-        },{
-            where : {
-                codeOrder : req.body.codeOrder
+            attributes: ['codeOrder', 'quantity', 'origin', 'destination', 'courierJne', 'costCourier']
+        }, {
+            where: {
+                codeOrder: req.body.codeOrder
             }
         });
     }
-    return res.status(200).send({order : result});
+    return res.status(200).send({ order: result });
 }
 
 async function payOrder(req, res) {
     const errors = validationResult(req);
-    if (!errors.isEmpty()){
+    if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-    
+
     let result;
-    let {codeOrder} = req.body;
+    let { codeOrder } = req.body;
     // Ubah status di tabel payments untuk codeOrder
 
     await Payment.update({
-        paymentStatus : 'paid'
-    },{
-        where : { 
-            codeOrder : codeOrder
+        paymentStatus: 'paid'
+    }, {
+        where: {
+            codeOrder: codeOrder
         }
     });
 
     //Ubah status di tabel order menjadi process
 
     await Order.update({
-        statusOrder : 'process'
-    },{
-        where : { 
-            codeOrder : codeOrder
+        statusOrder: 'process'
+    }, {
+        where: {
+            codeOrder: codeOrder
         }
     });
 
-    return res.status(200).send({message : `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`});
+    return res.status(200).send({ message: `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses` });
 }
 
 async function checkOut(req, res) {
     const errors = validationResult(req);
-    if (!errors.isEmpty()){
+    if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-    
+
     let result;
-    let {codeOrder} = req.body;
+    let { codeOrder } = req.body;
 
     //Ubah status di tabel order menjadi process
 
     await Order.update({
-        statusOrder : 'pending'
-    },{
-        where : { 
-            codeOrder : codeOrder
+        statusOrder: 'pending'
+    }, {
+        where: {
+            codeOrder: codeOrder
         }
     });
 
-    return res.status(200).send();
+    let orderNow = Order.findOne({
+        where: {
+            codeOrder: codeOrder
+        }
+    });
+
+    return res.status(200).send({ 
+        message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
+        nama_product : orderNow.nama
+    }
+    );
 }
 
 module.exports = {
