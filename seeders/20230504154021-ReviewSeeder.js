@@ -12,6 +12,20 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
+    await queryInterface.bulkInsert('Reviews', [
+      {
+        codeOrder: 'OR001',
+        rating: 3,
+        customerId: 1,
+        comment: 'awokwokwok'
+      },
+      {
+        codeOrder: 'OR002',
+        rating: 2,
+        customerId: 2,
+        comment: 'testetstets'
+      },
+    ]);
   },
 
   async down (queryInterface, Sequelize) {
