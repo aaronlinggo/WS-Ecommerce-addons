@@ -287,6 +287,8 @@ const getDetailProduct = async (req, res) => {
     return res.status(200).send(hasil);
 }
 
+
+
 module.exports = {
     getAll,
     addProduct,
