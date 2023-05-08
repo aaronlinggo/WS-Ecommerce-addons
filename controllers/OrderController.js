@@ -2,7 +2,9 @@ const Order = require('../models').Order;
 const Payment = require('../models').Payment;
 const Product = require('../models').Product;
 
-const { validationResult } = require("express-validator");
+const {
+    validationResult
+} = require("express-validator");
 const order = require('../models/order');
 
 async function viewOrder(req, res) {
@@ -23,8 +25,7 @@ async function viewOrder(req, res) {
                 customerId: req.params.customerId
             }
         });
-    }
-    else {
+    } else {
         //Kalau di body ada codeOrder
         //Cari order itu saja
 
@@ -36,7 +37,9 @@ async function viewOrder(req, res) {
             }
         });
     }
-    return res.status(200).send({ order: result });
+    return res.status(200).send({
+        order: result
+    });
 }
 
 async function payOrder(req, res) {
@@ -46,7 +49,9 @@ async function payOrder(req, res) {
     }
 
     let result;
-    let { codeOrder } = req.body;
+    let {
+        codeOrder
+    } = req.body;
     // Ubah status di tabel payments untuk codeOrder
 
     await Payment.update({
@@ -67,7 +72,9 @@ async function payOrder(req, res) {
         }
     });
 
-    return res.status(200).send({ message: `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses` });
+    return res.status(200).send({
+        message: `Pembayaran untuk pesanan dengan ID ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`
+    });
 }
 
 async function checkOut(req, res) {
@@ -77,7 +84,9 @@ async function checkOut(req, res) {
     }
 
     let result;
-    let { codeOrder } = req.body;
+    let {
+        codeOrder
+    } = req.body;
 
     //Ubah status di tabel order menjadi process
 
@@ -89,18 +98,18 @@ async function checkOut(req, res) {
         }
     });
 
-    let orderNow = Order.findAll({
+    let orderNow = await Order.findOne({
+        include: [{
+            model: Product
+        }],
         where: {
             codeOrder: codeOrder
-        }   
-        ,include:Product
+        }
     });
-    
 
-
-    return res.status(200).send({ 
+    return res.status(200).send({
         message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        nama_product : orderNow.nama
+        nama_product: orderNow
     });
 }
 
