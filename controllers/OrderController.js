@@ -75,6 +75,7 @@ async function checkOut(req, res) {
     }
 
     let result;
+<<<<<<< Updated upstream
     let { codeOrder } = req.body;
 
     //Ubah status di tabel order menjadi process
@@ -88,6 +89,72 @@ async function checkOut(req, res) {
     });
 
     let orderNow = Order.findOne({
+=======
+    let { courierJne,origin,destination,costCourier } = req.body;
+    let { customerId } = req.params;
+
+    //Pindah barang dari cart ke order
+    let order = await Order.findAll();
+    let id = "OR";
+    let panjang;
+    if(order.length<10){
+        panjang="0000"+order.length+1;
+    }
+    else if(order.length<100){
+        panjang="000"+order.length+1;
+    }
+    else if(order.length<1000){
+        panjang="00"+order.length+1;
+
+    }
+    else if(order.length<10000){
+        panjang="0"+order.length+1;
+    }
+    else if(order.length<100000){
+        panjang=order.length+1;
+    }
+    id = id+panjang;
+    
+    let cart = await Cart.findAll({
+        include: [{
+            model: Product
+        }],
+        where :{
+            customerId : customerId
+        }
+    });
+
+    
+
+    let subtotal=0;    
+
+    for (let i = 0; i < cart.length; i++) {
+        subtotal+=cart[i].Product.price * cart[i].quantity;
+    }
+
+    //wEIGHT MASIH PATEN
+    await Order.create({
+        codeOrder : id,
+        customerId : customerId,
+        courierJne : courierJne,
+        origin : origin,
+        destination : destination,
+        weight : 5,
+        costCourier : costCourier,
+        subtotal : subtotal,
+        statusOrder : "PROCESS",
+        createdAt : new Date(),
+        updatedAt : new Date()
+    });
+
+
+    //Ubah status di tabel order menjadi process
+
+    let orderNow = await Order.findOne({
+        include: [{
+            model: Product
+        }],
+>>>>>>> Stashed changes
         where: {
             codeOrder: codeOrder
         }
