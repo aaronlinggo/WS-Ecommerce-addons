@@ -94,12 +94,7 @@ async function checkOut(req, res) {
 
     //Pindah barang dari cart ke order
     let order = await Order.findAll();
-    let id = "OR"+ ((order.length + 1) + "").padStart(5, '0')
-    let product = await Product.findAll({
-    });    
-    return res.status(400).send({
-        msg : product
-    });
+    let id = "OR"+ ((order.length + 1) + "").padStart(5, '0');   
     
     let cart = await Cart.findAll({
         include: [{
@@ -135,42 +130,51 @@ async function checkOut(req, res) {
 
     //Tambah detail orders
 
-    let orderDetails = await OrderDetail.findAll({
-        include: [{
-            model: Product
-        }],
-        where : {
-            codeOrder : req.body.codeOrder
-        }
-    });
-
-    return res.status(400).send({
-        msg : orderDetails
-    });
-
     let arrOrderDetails = [];
     for (let i = 0; i < cart.length; i++) {
-        let orderDetails = await Order.create({
+        let orderDetails = await OrderDetail.create({
             codeOrder : id,
             codeProduct : cart[i].Product.codeProduct,
             quantity : cart[i].quantity,
             createdAt : new Date(),
             updatedAt : new Date()
         });
-        arrOrderDetails.push(orderDetails);
+        let newObj = {
+            product_code : cart[i].Product.codeProduct,
+            product_name : cart[i].Product.name,
+            product_price : cart[i].Product.price,
+            product_quantity : cart[i].quantity
+        }
+        arrOrderDetails.push(newObj);
     }
 
-    //Update payment
+    //Hapus yang dari cart
+    await Cart.destroy({
+        where : {
+            customerId : customerId
+        }
+    });
+
+    //Bikin payment
+    let idPayment = "INVOICEORDER"+ ((order.length + 1) + "").padStart(5, '0');   
+    
+    await Payment.create({
+        codePayment : idPayment,
+        codeOrder : id,
+        subtotal : subtotal,
+        paymentStatus : "unpaid",
+        createdAt : new Date(),
+        updatedAt : new Date()
+    });
 
     return res.status(200).send({
-        message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        Asal : orderNow.origin,
-        Tujuan : orderNow.destination,
-        Layanan : orderNow.courierJne,
-        Ongkos_Kirim : orderNow.costCourier,
-        Status_Order : orderNow.statusOrder,
-        Daftar_Product: orderNow.Product.name,
-        daftar_product2: "ceritanya daftar produk... nanti semua produk dibuat jadi 1 array"
+        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status `,
+        asal : origin,
+        tujuan : destination,
+        layanan : courierJne,
+        ongkos_kirim : costCourier,
+        status_order : "PENDING",
+        daftar_product: arrOrderDetails,
     });
 }
 
