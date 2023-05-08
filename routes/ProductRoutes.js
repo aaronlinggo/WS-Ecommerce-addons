@@ -46,7 +46,22 @@ router.get('/:nama?',
             }
         })
     }), validationMiddleware, authMiddleware.developerMiddleware, productController.getAll);
+
 router.post('/', upd.single('photo'),
+    check('photo')
+    .custom((value, {
+        req
+    }) => {
+        console.log(req.file);
+        if (req.file.mimetype === 'image/jpeg') {
+            return '.jpeg';
+        } else if (req.file.mimetype === 'image/png') {
+            return '.png';
+        } else {
+            return false;
+        }
+    })
+    .withMessage('Please only submit jpg/png document!'),
     check("name").notEmpty().withMessage("Name is required!"),
     check("price").notEmpty().withMessage("Price is required!"),
     check("price").isNumeric().withMessage("Price must be numeric!"),
@@ -54,7 +69,22 @@ router.post('/', upd.single('photo'),
     check("stock").isNumeric().withMessage("Stock must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
     validationMiddleware, authMiddleware.developerMiddleware, productController.addProduct);
+
 router.put('/edit/:id', upd.single('photo'),
+    check('photo')
+    .custom((value, {
+        req
+    }) => {
+        console.log(req.file);
+        if (req.file.mimetype === 'image/jpeg') {
+            return '.jpeg';
+        } else if (req.file.mimetype === 'image/png') {
+            return '.png';
+        } else {
+            return false;
+        }
+    })
+    .withMessage('Please only submit jpg/png document!'),
     check("name").notEmpty().withMessage("Name is required!"),
     check("price").notEmpty().withMessage("Price is required!"),
     check("price").isNumeric().withMessage("Price must be numeric!"),
@@ -62,7 +92,10 @@ router.put('/edit/:id', upd.single('photo'),
     check("stock").isNumeric().withMessage("Stock must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
     validationMiddleware, authMiddleware.developerMiddleware, productController.editProduct);
-router.delete('/delete/:id', validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
-router.get('/detail/:id', validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
+
+router.delete('/delete/:id',
+    check("id").notEmpty().withMessage("Product Code is required!"),
+    validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
+router.get('/detail/:id', check("id").notEmpty().withMessage("Product Code is required!"), validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
 
 module.exports = router;
