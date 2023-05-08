@@ -3,6 +3,8 @@ const OrderDetail = require('../models').OrderDetail;
 const Payment = require('../models').Payment;
 const Product = require('../models').Product;
 const Cart = require('../models').Cart;
+const axios = require("axios").default;
+require("dotenv").config();
 const formatRupiah = require('../helpers/formatRupiah');
 
 const {
@@ -22,7 +24,7 @@ async function viewOrder(req, res) {
         //Cari semua order dari user yg login
 
         result = await Order.findAll({
-            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
+            attributes: [['codeOrder', 'Code Order'], ['origin', 'Asal'], ['destination', 'Tujuan'], ['courierJne', 'Layanan'], ['costCourier', 'Ongkos Kirim']]
         }, {
             where: {
                 customerId: req.params.customerId
@@ -33,7 +35,7 @@ async function viewOrder(req, res) {
         //Cari order itu saja
 
         result = await Order.findAll({
-            attributes: [['codeOrder','Code Order'], ['origin','Asal'], ['destination','Tujuan'], ['courierJne','Layanan'], ['costCourier','Ongkos Kirim']]
+            attributes: [['codeOrder', 'Code Order'], ['origin', 'Asal'], ['destination', 'Tujuan'], ['courierJne', 'Layanan'], ['costCourier', 'Ongkos Kirim']]
         }, {
             where: {
                 codeOrder: req.body.codeOrder
@@ -86,45 +88,65 @@ async function checkOut(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let { courierJne,origin,destination,costCourier } = req.body;
+    //Ubah status di tabel order menjadi process
+
+
+    //Pindah barang dari cart ke order
+    let { courierJne, origin, destination } = req.body;
     let { customerId } = req.params;
 
     //Buat id order
     let order = await Order.findAll();
-    let id = "OR"+ ((order.length + 1) + "").padStart(5, '0');   
-    
+    let id = "OR" + ((order.length + 1) + "").padStart(5, '0');
+
     let cart = await Cart.findAll({
         include: [{
             model: Product
         }],
-        where :{
-            customerId : customerId
+        where: {
+            customerId: customerId
         }
-    });    
+    });
 
-
-    let subtotal=0;    
+    let subtotal = 0;
     let totalWeight = 0;
 
-    //Total Weight dan Subtotal
     for (let i = 0; i < cart.length; i++) {
-        subtotal+=cart[i].Product.price * cart[i].quantity;
-        totalWeight+=cart[i].Product.weight*cart[i].quantity;
+        subtotal += cart[i].Product.price * cart[i].quantity;
+        totalWeight += cart[i].Product.weight;
     }
 
-    //Buat header order
+    const costResult = await axios.post(
+        "https://api.rajaongkir.com/starter/cost", {
+        "origin": origin,
+        "destination": destination,
+        "weight": totalWeight,
+        "courier": "jne"
+    },
+        {
+            headers: {
+                key: process.env.RAJAONGKIR_KEY,
+            }
+        }
+    );
+
+    var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
+        if (s.service == courierJne)
+            return s
+    });
+
     await Order.create({
-        codeOrder : id,
-        customerId : customerId,
-        courierJne : courierJne,
-        origin : origin,
-        destination : destination,
-        weight : totalWeight,
-        costCourier : costCourier,
-        subtotal : subtotal,
-        statusOrder : "PENDING",
-        createdAt : new Date(),
-        updatedAt : new Date()
+        codeOrder: id,
+        customerId: customerId,
+        courierJne: courierJne,
+        origin: origin,
+        destination: destination,
+        weight: totalWeight,
+        costCourier: servicesCourier.cost[0].value,
+        subtotal: subtotal,
+        statusOrder: "PENDING",
+        createdAt: new Date(),
+        updatedAt: new Date()
     });
 
 
@@ -134,11 +156,11 @@ async function checkOut(req, res) {
     let arrOrderDetails = [];
     for (let i = 0; i < cart.length; i++) {
         let orderDetails = await OrderDetail.create({
-            codeOrder : id,
-            codeProduct : cart[i].Product.codeProduct,
-            quantity : cart[i].quantity,
-            createdAt : new Date(),
-            updatedAt : new Date()
+            codeOrder: id,
+            codeProduct: cart[i].Product.codeProduct,
+            quantity: cart[i].quantity,
+            createdAt: new Date(),
+            updatedAt: new Date()
         });
         let newObj = {
             product_code : cart[i].Product.codeProduct,
@@ -152,31 +174,33 @@ async function checkOut(req, res) {
 
     //Hapus yang di cart
     await Cart.destroy({
-        where : {
-            customerId : customerId
+        where: {
+            customerId: customerId
         }
     });
 
     //Bikin payment
-    let idPayment = "INVOICEORDER"+ ((order.length + 1) + "").padStart(5, '0');   
-    
+    let idPayment = "INVOICEORDER" + ((order.length + 1) + "").padStart(5, '0');
+
     await Payment.create({
-        codePayment : idPayment,
-        codeOrder : id,
-        subtotal : subtotal,
-        paymentStatus : "unpaid",
-        createdAt : new Date(),
-        updatedAt : new Date()
+        codePayment: idPayment,
+        codeOrder: id,
+        subtotal: subtotal,
+        paymentStatus: "unpaid",
+        createdAt: new Date(),
+        updatedAt: new Date()
     });
 
     return res.status(200).send({
         message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
         asal : origin,
         tujuan : destination,
-        layanan : courierJne,
-        ongkos_kirim : formatRupiah(costCourier),
+        layanan : servicesCourier.cost[0].value,
+        berat: totalWeight,
+        ongkos_kirim : formatRupiah(servicesCourier.cost[0].value),
         subtotal : formatRupiah(subtotal),
-        total : formatRupiah(parseInt(costCourier)+parseInt(subtotal)),
+        estimasi_sampai: servicesCourier.cost[0].etd,
+        total : formatRupiah(parseInt(servicesCourier.cost[0].value)+parseInt(subtotal)),
         status_order : "PENDING",
         daftar_product: arrOrderDetails,
     });
