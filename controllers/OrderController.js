@@ -5,6 +5,7 @@ const Product = require('../models').Product;
 const Cart = require('../models').Cart;
 const axios = require("axios").default;
 require("dotenv").config();
+const formatRupiah = require('../helpers/formatRupiah');
 
 const {
     validationResult
@@ -94,7 +95,7 @@ async function checkOut(req, res) {
     let { courierJne, origin, destination } = req.body;
     let { customerId } = req.params;
 
-    //Pindah barang dari cart ke order
+    //Buat id order
     let order = await Order.findAll();
     let id = "OR" + ((order.length + 1) + "").padStart(5, '0');
 
@@ -108,18 +109,18 @@ async function checkOut(req, res) {
     });
 
     let subtotal = 0;
-    let weight = 0;
+    let totalWeight = 0;
 
     for (let i = 0; i < cart.length; i++) {
         subtotal += cart[i].Product.price * cart[i].quantity;
-        weight += cart[i].Product.weight;
+        totalWeight += cart[i].Product.weight;
     }
 
     const costResult = await axios.post(
         "https://api.rajaongkir.com/starter/cost", {
         "origin": origin,
         "destination": destination,
-        "weight": weight,
+        "weight": totalWeight,
         "courier": "jne"
     },
         {
@@ -134,6 +135,7 @@ async function checkOut(req, res) {
             return s
     });
 
+    subtotal += servicesCourier.cost[0].value;
 
     await Order.create({
         codeOrder: id,
@@ -141,7 +143,7 @@ async function checkOut(req, res) {
         courierJne: courierJne,
         origin: origin,
         destination: destination,
-        weight: weight,
+        weight: totalWeight,
         costCourier: servicesCourier.cost[0].value,
         subtotal: subtotal,
         statusOrder: "PENDING",
@@ -152,6 +154,7 @@ async function checkOut(req, res) {
 
     //Tambah detail orders
 
+    //Pindah barang dari cart ke order
     let arrOrderDetails = [];
     for (let i = 0; i < cart.length; i++) {
         let orderDetails = await OrderDetail.create({
@@ -162,15 +165,16 @@ async function checkOut(req, res) {
             updatedAt: new Date()
         });
         let newObj = {
-            product_code: cart[i].Product.codeProduct,
-            product_name: cart[i].Product.name,
-            product_price: cart[i].Product.price,
-            product_quantity: cart[i].quantity
+            product_code : cart[i].Product.codeProduct,
+            product_name : cart[i].Product.name,
+            product_price : formatRupiah(cart[i].Product.price),
+            product_quantity : cart[i].quantity,
+            product_subtotal : formatRupiah(parseInt(cart[i].Product.price)*parseInt(cart[i].quantity))
         }
         arrOrderDetails.push(newObj);
     }
 
-    //Hapus yang dari cart
+    //Hapus yang di cart
     await Cart.destroy({
         where: {
             customerId: customerId
@@ -190,14 +194,16 @@ async function checkOut(req, res) {
     });
 
     return res.status(200).send({
-        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status `,
-        asal: origin,
-        tujuan: destination,
-        layanan: servicesCourier.cost[0].value,
-        ongkos_kirim: servicesCourier.cost[0].value,
-        berat: weight,
+        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
+        asal : origin,
+        tujuan : destination,
+        layanan : servicesCourier.cost[0].value,
+        berat: totalWeight,
+        ongkos_kirim : formatRupiah(servicesCourier.cost[0].value),
+        subtotal : formatRupiah(subtotal),
         estimasi_sampai: servicesCourier.cost[0].etd,
-        status_order: "PENDING",
+        total : formatRupiah(parseInt(costCourier)+parseInt(subtotal)),
+        status_order : "PENDING",
         daftar_product: arrOrderDetails,
     });
 }
