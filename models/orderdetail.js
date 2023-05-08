@@ -12,6 +12,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   OrderDetail.init({
     codeOrderDetail : {type: DataTypes.INTEGER,primaryKey:true,autoIncrement:true},
+
     codeOrder: DataTypes.STRING,
     codeProduct: DataTypes.STRING,
     quantity: DataTypes.INTEGER,
@@ -20,5 +21,6 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'OrderDetail',
     tableName: "orderdetails",
   });
+  OrderDetail.removeAttribute("id");
   return OrderDetail;
 };
