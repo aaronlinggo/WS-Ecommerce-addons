@@ -16,8 +16,6 @@ module.exports = {
     await queryInterface.bulkInsert('Orders', [
       {
         codeOrder: 'OR001',
-        codeProduct: 'WSEC00001',
-        quantity: 1,
         customerId: 1,
         courierJne: 'REG',
         origin: 'SUB',
@@ -28,8 +26,6 @@ module.exports = {
       },
       {
         codeOrder: 'OR002',
-        codeProduct: 'WSEC00002',
-        quantity: 1,
         customerId: 2,
         courierJne: 'REG',
         origin: 'SUB',
