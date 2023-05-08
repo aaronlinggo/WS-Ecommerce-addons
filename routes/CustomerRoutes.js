@@ -50,6 +50,6 @@ check("customerId").custom((value) => {
         }
     })
 })
-,COrder.payOrder);
+,COrder.checkOut);
 
 module.exports = router;

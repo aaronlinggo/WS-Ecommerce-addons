@@ -89,48 +89,34 @@ async function checkOut(req, res) {
 
 
     //Pindah barang dari cart ke order
-    let { codeOrder,courierJne,origin,destination,costCourier } = req.body;
+    let { courierJne,origin,destination,costCourier } = req.body;
     let { customerId } = req.params;
 
     //Pindah barang dari cart ke order
-    let order = Order.findAll();
-    let id = "OR";
-    let panjang;
-    if(order.length<10){
-        panjang="0000"+order.length+1;
-    }
-    else if(order.length<100){
-        panjang="000"+order.length+1;
-    }
-    else if(order.length<1000){
-        panjang="00"+order.length+1;
-
-    }
-    else if(order.length<10000){
-        panjang="0"+order.length+1;
-    }
-    else if(order.length<100000){
-        panjang=order.length+1;
-    }
-    id = id+panjang;
+    let order = await Order.findAll();
+    let id = "OR"+ ((order.length + 1) + "").padStart(5, '0')
+    let product = await Product.findAll({
+    });    
+    return res.status(400).send({
+        msg : product
+    });
     
-    let cart = Cart.findAll({
+    let cart = await Cart.findAll({
         include: [{
             model: Product
         }],
         where :{
             customerId : customerId
         }
-    });
+    });    
 
-    
 
     let subtotal=0;    
+
 
     for (let i = 0; i < cart.length; i++) {
         subtotal+=cart[i].Product.price * cart[i].quantity;
     }
-
     //wEIGHT MASIH PATEN
     await Order.create({
         codeOrder : id,
@@ -157,7 +143,11 @@ async function checkOut(req, res) {
             codeOrder : req.body.codeOrder
         }
     });
-    
+
+    return res.status(400).send({
+        msg : orderDetails
+    });
+
     let arrOrderDetails = [];
     for (let i = 0; i < cart.length; i++) {
         let orderDetails = await Order.create({
