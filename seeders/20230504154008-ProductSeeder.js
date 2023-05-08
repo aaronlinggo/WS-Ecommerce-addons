@@ -22,6 +22,7 @@ function generateFakerItems(rowCount) {
       developerId: faker.helpers.arrayElement([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
       name: faker.commerce.productName(),
       price: faker.commerce.price(10000, 100000, 0),
+      weight: faker.random.numeric()+'000',
       photo: faker.image.abstract(),
       stock: faker.commerce.price(1, 100, 0),
       description: faker.commerce.productDescription(),

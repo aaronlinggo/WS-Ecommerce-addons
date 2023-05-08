@@ -67,6 +67,8 @@ router.post('/', upd.single('photo'),
     check("price").isNumeric().withMessage("Price must be numeric!"),
     check("stock").notEmpty().withMessage("Stock is required!"),
     check("stock").isNumeric().withMessage("Stock must be numeric!"),
+    check("weight").notEmpty().withMessage("Weight is required!"),
+    check("weight").isNumeric().withMessage("Weight must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
     validationMiddleware, authMiddleware.developerMiddleware, productController.addProduct);
 
@@ -90,6 +92,8 @@ router.put('/edit/:id', upd.single('photo'),
     check("price").isNumeric().withMessage("Price must be numeric!"),
     check("stock").notEmpty().withMessage("Stock is required!"),
     check("stock").isNumeric().withMessage("Stock must be numeric!"),
+    check("weight").notEmpty().withMessage("Weight is required!"),
+    check("weight").isNumeric().withMessage("Weight must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
     validationMiddleware, authMiddleware.developerMiddleware, productController.editProduct);
 
