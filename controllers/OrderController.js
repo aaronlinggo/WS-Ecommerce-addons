@@ -3,6 +3,7 @@ const OrderDetail = require('../models').OrderDetail;
 const Payment = require('../models').Payment;
 const Product = require('../models').Product;
 const Cart = require('../models').Cart;
+const formatRupiah = require('../helpers/formatRupiah');
 
 const {
     validationResult
@@ -142,8 +143,9 @@ async function checkOut(req, res) {
         let newObj = {
             product_code : cart[i].Product.codeProduct,
             product_name : cart[i].Product.name,
-            product_price : cart[i].Product.price,
-            product_quantity : cart[i].quantity
+            product_price : formatRupiah(cart[i].Product.price),
+            product_quantity : cart[i].quantity,
+            product_subtotal : formatRupiah(parseInt(cart[i].Product.price)*parseInt(cart[i].quantity))
         }
         arrOrderDetails.push(newObj);
     }
@@ -172,7 +174,9 @@ async function checkOut(req, res) {
         asal : origin,
         tujuan : destination,
         layanan : courierJne,
-        ongkos_kirim : costCourier,
+        ongkos_kirim : formatRupiah(costCourier),
+        subtotal : formatRupiah(subtotal),
+        total : formatRupiah(parseInt(costCourier)+parseInt(subtotal)),
         status_order : "PENDING",
         daftar_product: arrOrderDetails,
     });
