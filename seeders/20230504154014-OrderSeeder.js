@@ -15,27 +15,25 @@ module.exports = {
 
     await queryInterface.bulkInsert('Orders', [
       {
-        codeOrder: 'OR001',
-        codeProduct: 'WSEC00001',
-        quantity: 1,
+        codeOrder: 'OR00001',
         customerId: 1,
         courierJne: 'REG',
         origin: 'SUB',
         destination: 'JKT',
         weight: 1,
         costCourier: 14000,
+        subtotal: 28000,
         statusOrder: 'PENDING',
       },
       {
-        codeOrder: 'OR002',
-        codeProduct: 'WSEC00002',
-        quantity: 1,
+        codeOrder: 'OR00002',
         customerId: 2,
         courierJne: 'REG',
         origin: 'SUB',
         destination: 'JKT',
         weight: 1,
         costCourier: 14000,
+        subtotal: 28000,
         statusOrder: 'PENDING',
       },
     ]);
