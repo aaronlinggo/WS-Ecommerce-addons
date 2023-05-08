@@ -9,14 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      codeOrder: {
-        allowNull: false,
-        type: Sequelize.STRING,
-        references: {
-          model: 'orders',
-          key: 'codeOrder'
-        },
-      },
       rating: {
         allowNull: false,
         type: Sequelize.ENUM(['1','2','3','4','5'])
