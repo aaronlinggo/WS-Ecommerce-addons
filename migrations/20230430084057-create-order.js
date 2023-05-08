@@ -9,18 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.STRING
       },
-      codeProduct: {
-        allowNull: false,
-        type: Sequelize.STRING,
-        references: {
-          model: 'products',
-          key: 'codeProduct'
-        },
-      },
-      quantity: {
-        allowNull: false,
-        type: Sequelize.INTEGER
-      },
       customerId: {
         allowNull: false,
         type: Sequelize.INTEGER,
@@ -46,6 +34,10 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       costCourier: {
+        allowNull: false,
+        type: Sequelize.INTEGER
+      },
+      subtotal: {
         allowNull: false,
         type: Sequelize.INTEGER
       },
