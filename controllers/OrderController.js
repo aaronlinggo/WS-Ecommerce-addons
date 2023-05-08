@@ -135,8 +135,6 @@ async function checkOut(req, res) {
             return s
     });
 
-    subtotal += servicesCourier.cost[0].value;
-
     await Order.create({
         codeOrder: id,
         customerId: customerId,
@@ -202,7 +200,7 @@ async function checkOut(req, res) {
         ongkos_kirim : formatRupiah(servicesCourier.cost[0].value),
         subtotal : formatRupiah(subtotal),
         estimasi_sampai: servicesCourier.cost[0].etd,
-        total : formatRupiah(parseInt(costCourier)+parseInt(subtotal)),
+        total : formatRupiah(parseInt(servicesCourier.cost[0].value)+parseInt(subtotal)),
         status_order : "PENDING",
         daftar_product: arrOrderDetails,
     });
