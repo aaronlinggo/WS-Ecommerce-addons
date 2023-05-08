@@ -23,7 +23,8 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Cart',
-    tableName: 'cart',
+    tableName: 'carts',
   });
+  Cart.removeAttribute('id');
   return Cart;
 };

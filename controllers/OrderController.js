@@ -85,49 +85,34 @@ async function checkOut(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let result;
-    let { codeOrder,courierJne,origin,destination,costCourier } = req.body;
+    //Ubah status di tabel order menjadi process
+
+
+    //Pindah barang dari cart ke order
+    let { courierJne,origin,destination,costCourier } = req.body;
     let { customerId } = req.params;
 
     //Pindah barang dari cart ke order
-    let order = Order.findAll();
-    let id = "OR";
-    let panjang;
-    if(order.length<10){
-        panjang="0000"+order.length+1;
-    }
-    else if(order.length<100){
-        panjang="000"+order.length+1;
-    }
-    else if(order.length<1000){
-        panjang="00"+order.length+1;
-
-    }
-    else if(order.length<10000){
-        panjang="0"+order.length+1;
-    }
-    else if(order.length<100000){
-        panjang=order.length+1;
-    }
-    id = id+panjang;
+    let order = await Order.findAll();
+    let id = "OR"+ ((order.length + 1) + "").padStart(5, '0');   
     
-    let cart = Cart.findAll({
+    let cart = await Cart.findAll({
         include: [{
             model: Product
         }],
         where :{
             customerId : customerId
         }
-    });
+    });    
 
-    
 
-    let subtotal=0;
+    let subtotal=0;    
+
 
     for (let i = 0; i < cart.length; i++) {
         subtotal+=cart[i].Product.price * cart[i].quantity;
     }
-
+    //wEIGHT MASIH PATEN
     await Order.create({
         codeOrder : id,
         customerId : customerId,
@@ -136,47 +121,60 @@ async function checkOut(req, res) {
         destination : destination,
         weight : 5,
         costCourier : costCourier,
-        subtotal
+        subtotal : subtotal,
+        statusOrder : "PENDING",
+        createdAt : new Date(),
+        updatedAt : new Date()
     });
 
 
-    //Ubah status di tabel order menjadi process
+    //Tambah detail orders
 
-    await Order.update({
-        statusOrder: 'pending'
-    }, {
-        where: {
-            codeOrder: codeOrder
+    let arrOrderDetails = [];
+    for (let i = 0; i < cart.length; i++) {
+        let orderDetails = await OrderDetail.create({
+            codeOrder : id,
+            codeProduct : cart[i].Product.codeProduct,
+            quantity : cart[i].quantity,
+            createdAt : new Date(),
+            updatedAt : new Date()
+        });
+        let newObj = {
+            product_code : cart[i].Product.codeProduct,
+            product_name : cart[i].Product.name,
+            product_price : cart[i].Product.price,
+            product_quantity : cart[i].quantity
         }
-    });
+        arrOrderDetails.push(newObj);
+    }
 
-    let orderNow = await Order.findOne({
-        include: [{
-            model: Product
-        }],
-        where: {
-            codeOrder: codeOrder
-        }
-    });
-
-    let orderDetails = await OrderDetail.findAll({
-        include: [{
-            model: Product
-        }],
+    //Hapus yang dari cart
+    await Cart.destroy({
         where : {
-            codeOrder : req.body.codeOrder
+            customerId : customerId
         }
+    });
+
+    //Bikin payment
+    let idPayment = "INVOICEORDER"+ ((order.length + 1) + "").padStart(5, '0');   
+    
+    await Payment.create({
+        codePayment : idPayment,
+        codeOrder : id,
+        subtotal : subtotal,
+        paymentStatus : "unpaid",
+        createdAt : new Date(),
+        updatedAt : new Date()
     });
 
     return res.status(200).send({
-        message: `Orderan dengan kode ${req.body.codeOrder} sedang dalam proses checkout`,
-        Asal : orderNow.origin,
-        Tujuan : orderNow.destination,
-        Layanan : orderNow.courierJne,
-        Ongkos_Kirim : orderNow.costCourier,
-        Status_Order : orderNow.statusOrder,
-        Daftar_Product: orderNow.Product.name,
-        daftar_product2: "ceritanya daftar produk... nanti semua produk dibuat jadi 1 array"
+        message: `Order dengan kode pembayaran ${idPayment} sedang dalam status `,
+        asal : origin,
+        tujuan : destination,
+        layanan : courierJne,
+        ongkos_kirim : costCourier,
+        status_order : "PENDING",
+        daftar_product: arrOrderDetails,
     });
 }
 
