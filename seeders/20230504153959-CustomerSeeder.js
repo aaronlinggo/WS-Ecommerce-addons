@@ -18,15 +18,13 @@ module.exports = {
 function generateFakerItems(rowCount) {
   const data = [];
   for (let i = 0; i < rowCount; i++) {
-    let firstName = faker.name.firstName();
-    let lastName = faker.name.lastName();
     const newItem = {
       developerId: faker.helpers.arrayElement([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
-      firstName: firstName,
-      lastName: lastName,
+      firstName: faker.name.firstName(),
+      lastName: faker.name.lastName(),
       email: faker.helpers.unique(faker.internet.email),
       phoneNumber: faker.phone.number('08##########'),
-      username: (firstName+lastName).toLowerCase(),
+      username: faker.helpers.unique(faker.name.firstName),
       password: bcrypt.hashSync("12345678", 12),
       createdAt: new Date(),
       updatedAt: new Date()

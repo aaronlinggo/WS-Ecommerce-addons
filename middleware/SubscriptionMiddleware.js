@@ -21,4 +21,6 @@ const subscriptionMiddleware = async (req, res, next) => {
     }
 };
 
-module.exports = subscriptionMiddleware;
+module.exports = {
+    subscriptionMiddleware
+};

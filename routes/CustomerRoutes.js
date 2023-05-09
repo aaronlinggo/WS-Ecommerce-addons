@@ -11,7 +11,6 @@ const Customer = require('../models').Customer;
 const { check } = require("express-validator");
 
 const router = express.Router();
-const authMiddleware = require("../middleware/AuthMiddleware")
 
 // /customer
 //GET
@@ -22,8 +21,7 @@ check("customerId").custom((value) => {
             return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
         }
     })
-}),
-authMiddleware.customerMiddleware
+})
 ,COrder.viewOrder);
 
 router.post("/order/payOrder/:customerId",
@@ -40,8 +38,7 @@ check("codeOrder").custom((value) => {
             return Promise.reject("Order dengan Id tersebut tidak ditemukan");
         }
     })
-}),
-authMiddleware.customerMiddleware
+})
 ,COrder.payOrder);
 
 
@@ -52,8 +49,7 @@ check("customerId").custom((value) => {
             return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
         }
     })
-}),
-authMiddleware.customerMiddleware
+})
 ,COrder.checkOut);
 
 module.exports = router;
