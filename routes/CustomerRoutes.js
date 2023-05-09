@@ -49,7 +49,37 @@ check("customerId").custom((value) => {
             return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
         }
     })
+}),
+check("courierJne").custom((value) => {
+    if(value=="OKE" || value=="REG" || value=="SPS" || value=="YES"){
+        return true;
+    }
+    else{
+        return Promise.reject("Layanan yang tersedia hanya OKE,REG,SPS,YES");
+    }
+}),
+check("origin").custom((value) => {
+    if(value<1 || value>500){
+        return Promise.reject("Kode kota asal hanya boleh dari 1-500");
+    }
+    return true;
+}),
+check("destination").custom((value) => {
+    if(value<1 || value>500){
+        return Promise.reject("Kode kota tujuan hanya boleh dari 1-500");
+    }
+    return true;
 })
 ,COrder.checkOut);
+
+router.post("/addToCart/:customerId",
+check("customerId").custom((value) => {
+    return Customer.findOne({ where: { id: value } }).then((user) => {
+        if (!user) {
+            return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+        }
+    })
+})
+,COrder.addToCart);
 
 module.exports = router;
