@@ -31,27 +31,33 @@ function generateFakerItems(rowCount) {
     if (err) throw err;
   
     for (const file of files) {
-      fs.unlink(path.join("./storage/cyrellew", file), (err) => {
-        if (err) throw err;
-      });
+      if (file != '.gitkeep'){
+        fs.unlink(path.join("./storage/cyrellew", file), (err) => {
+          if (err) throw err;
+        });
+      }
     }
   });
   fs.readdir("./storage/alaskar", (err, files) => {
     if (err) throw err;
   
     for (const file of files) {
-      fs.unlink(path.join("./storage/alaskar", file), (err) => {
-        if (err) throw err;
-      });
+      if (file != '.gitkeep'){
+        fs.unlink(path.join("./storage/alaskar", file), (err) => {
+          if (err) throw err;
+        });
+      }
     }
   });
   fs.readdir("./storage/felput", (err, files) => {
     if (err) throw err;
   
     for (const file of files) {
-      fs.unlink(path.join("./storage/felput", file), (err) => {
-        if (err) throw err;
-      });
+      if (file != '.gitkeep'){
+        fs.unlink(path.join("./storage/felput", file), (err) => {
+          if (err) throw err;
+        });
+      }
     }
   });
   for (let i = 0; i < rowCount; i++) {
