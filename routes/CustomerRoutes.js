@@ -7,6 +7,7 @@ const CCustomer = require("../controllers/CustomerController");
 
 const Order = require('../models').Order;
 const Customer = require('../models').Customer;
+const OrderDetail = require('../models').OrderDetail;
 
 const { check } = require("express-validator");
 
@@ -111,5 +112,29 @@ router.post("/addToCart/:customerId",
         return true;
     })
     , CCustomer.addToCart);
+
+//REVIEW PRODUCT
+//params =  customerId (1-20)
+//body =    quantity (1 atau 1,2,3,4,....), 
+//          codeProduct (WSEC00002 / WSEC00001,WSEC00003), 
+//          nameProduct (Small Fresh Car / Small Fresh Car,Electronic Steel Car)
+router.post("/review/:customerId",
+check("customerId").custom((value) => {
+    return Customer.findOne({ where: { id: value } }).then((user) => {
+        if (!user) {
+            return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+        }
+    })
+}),
+check("rating").isInt({ min: 1, max: 5 }).withMessage("Rating harus berupa angka dari 1-5!"),
+check("comment").notEmpty().withMessage("Comment haruss diisi!"),
+check("codeOrderDetail").custom((value) => {
+    return OrderDetail.findOne({ where: { codeOrderDetail: value } }).then((orderDetail) => {
+        if (!orderDetail) {
+            return Promise.reject("Order detail dengan code tersebut tidak ditemukan");
+        }
+    })
+})
+, CCustomer.addReview);
 
 module.exports = router;

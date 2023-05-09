@@ -3,6 +3,9 @@ const OrderDetail = require('../models').OrderDetail;
 const Payment = require('../models').Payment;
 const Product = require('../models').Product;
 const Cart = require('../models').Cart;
+const Review = require('../models').Review;
+
+
 const axios = require("axios").default;
 require("dotenv").config();
 const formatRupiah = require('../helpers/formatRupiah');
@@ -413,10 +416,61 @@ async function addToCart(req, res) {
             new_item : isiCart
         });
     } catch (e) {
-
-
         return res.status(500).send({
             message: e.toString()
+        });
+    }
+}
+
+async function addReview(req,res){
+    try{
+        let {customerId} = req.params;
+        let {codeOrderDetail,rating,comment} = req.body;
+
+        //Cek customer yang review benar telah pesan produk
+        let checkPesanan = await OrderDetail.findAll({
+            include : [{
+                model : Order
+            }],
+            where :{
+                codeOrderDetail : codeOrderDetail,
+                customerId : customerId
+            }
+        });
+
+        if(checkPesanan.length==0){
+            return res.status(400).send({
+                message : "Kamu tidak memesan produk ini!"
+            });
+        }
+
+        //Review Product
+        //Kalau sdh pernah review gimana? update review? gk bisa review lagi ?
+        await Review.create({
+            rating : rating,
+            customerId : customerId,
+            comment : comment,
+            createdAt : new Date(),
+            updatedAt : new Date(),
+            codeOrderDetail : codeOrderDetail
+        });
+
+        let produkNow = await Product.findOne({
+            include : [{
+                model : OrderDetail
+            }],
+            where:{
+                codeOrderDetail : codeOrderDetail
+            }
+        });
+
+        return res.status(201).send({
+            message : `Berhasil submit review untuk produk ${produkNow.name} dengan rating ${rating}/5 `
+        });
+
+    }catch(e){
+        return res.status(500).send({
+            message : e.toString()
         });
     }
 }
@@ -425,5 +479,6 @@ module.exports = {
     viewOrder,
     payOrder,
     checkOut,
-    addToCart
+    addToCart,
+    addReview
 }
