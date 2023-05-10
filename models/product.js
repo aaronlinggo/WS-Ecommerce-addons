@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
     developerId: DataTypes.INTEGER,
     name: DataTypes.STRING,
     price: DataTypes.INTEGER,
-    weight: DataTypes.INTEGER,
+    weight : DataTypes.INTEGER,
     photo: DataTypes.STRING,
     stock: DataTypes.INTEGER,
     description: DataTypes.TEXT
