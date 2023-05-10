@@ -1,13 +1,18 @@
-const { Customer, Order, Product, Payment } = require('../models');
+const { Customer, Order, Product, Payment, OrderDetail } = require('../models');
 
 // NOMOR 11
 const seeAllRequestOrder = async (req, res) => {
-  let data_all_order = await Order.findAll({
-    where: { statusOrder: 'PENDING' },
+  let data_all_order = await OrderDetail.findAll({
     include: [
       {
-        model: Customer,
-        attributes: ['firstName', 'lastName']
+        model: Order,
+        where: { statusOrder: 'PENDING' },
+        include: [
+          {
+            model: Customer,
+            attributes: ['firstName', 'lastName']
+          }
+        ]
       },
       {
         model: Product,
@@ -19,16 +24,16 @@ const seeAllRequestOrder = async (req, res) => {
   const output = {
     status: 200,
     body: data_all_order.map((orders) => ({
-      'Customer Name': orders.Customer.firstName + ' ' + orders.Customer.lastName,
+      'Customer Name': orders.Order.Customer.firstName + ' ' + orders.Order.Customer.lastName,
       'Product Name': orders.Product.name,
       'Order Details': {
         'Code': orders.codeOrder,
-        'Origin': orders.origin,
-        'Destination': orders.destination,
-        'Weight': orders.weight,
-        'Courier JNE': orders.courierJne,
-        'Courier Cost': orders.costCourier,
-        'Status': orders.statusOrder,
+        'Origin': orders.Order.origin,
+        'Destination': orders.Order.destination,
+        'Weight': orders.Order.weight + ' gram',
+        'Courier JNE': orders.Order.courierJne,
+        'Courier Cost': 'Rp ' + orders.Order.costCourier + ',00',
+        'Status': orders.Order.statusOrder,
       }
     })),
   };
