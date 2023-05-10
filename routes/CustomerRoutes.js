@@ -1,6 +1,10 @@
-const { response } = require("express");
+const {
+    response
+} = require("express");
 const express = require("express");
-const { Op } = require("sequelize");
+const {
+    Op
+} = require("sequelize");
 
 const CCustomer = require("../controllers/CustomerController");
 // const COrder = require("../controllers/OrderController");
@@ -8,7 +12,10 @@ const CCustomer = require("../controllers/CustomerController");
 const Order = require('../models').Order;
 const Customer = require('../models').Customer;
 
-const { check } = require("express-validator");
+const {
+    check
+} = require("express-validator");
+const authMiddleware = require("../middleware/AuthMiddleware")
 
 const router = express.Router();
 
