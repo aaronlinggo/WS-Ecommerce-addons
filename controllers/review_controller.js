@@ -6,25 +6,39 @@ const seeAllReview = async (req, res) => {
     include: [
       {
         model: OrderDetail,
+        include: [
+          {
+            model: Order,
+            attributes: ['courierJne']
+          },
+          {
+            model: Product,
+            attributes: ['name', 'price']
+          }
+        ]
+      },
+      {
+        model: Customer,
+        attributes: ['firstName', 'lastName']
       }
     ]
   });
 
-  // const output = {
-  //   status: 200,
-  //   body: data_all_review.map((review) => ({
-  //     'Customer Name': review.Customer.firstName + ' ' + review.Customer.lastName,
-  //     'Product Name': review.Order.OrderDetail.Product.name,
-  //     'Product Price': review.Order.OrderDetail.Product.price,
-  //     'Courier JNE': review.Order.courierJne,
-  //     'Review': {
-  //       'Rating': review.rating,
-  //       'Comment': review.comment
-  //     }
-  //   })),
-  // };
+  const output = {
+    status: 200,
+    body: data_all_review.map((review) => ({
+      'Customer Name': review.Customer.firstName + ' ' + review.Customer.lastName,
+      'Product Name': review.OrderDetail.Product.name,
+      'Product Price': 'Rp ' + review.OrderDetail.Product.price + ',00',
+      'Courier JNE': review.OrderDetail.Order.courierJne,
+      'Review': {
+        'Rating': review.rating,
+        'Comment': review.comment
+      }
+    })),
+  };
 
-  return res.status(200).json(data_all_review);
+  return res.status(output.status).json(output);
 }
 
 module.exports = {
