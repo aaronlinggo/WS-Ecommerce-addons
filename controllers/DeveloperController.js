@@ -1,6 +1,9 @@
 const {
     Op
 } = require('sequelize');
+const {
+    sequelize
+} = require('../models');
 const Customer = require('../models').Customer;
 const Developer = require('../models').Developer;
 const Order = require('../models').Order;
@@ -17,23 +20,26 @@ const ExportOrder = async (req, res) => {
     const path = "./files";
     
     worksheet.columns = [
-        { header: "Code Order", key: "codeOrder", width: 10 },
-        { header: "Customer", key: "customer", width: 10 },
+        { header: "Code Order", key: "codeOrder", width: 15 },
+        { header: "Customer", key: "customer", width: 20 },
         { header: "Courier", key: "courier", width: 10 },
-        { header: "address", key: "address", width: 10 },
-        { header: "weight", key: "weight", width: 10 },
-        { header: "Cost Courier", key: "costCourier", width: 10 },
+        { header: "Address", key: "address", width: 30 },
+        { header: "Weight", key: "weight", width: 10 },
+        { header: "Cost Courier", key: "costCourier", width: 15 },
         { header: "Subtotal", key: "subtotal", width: 10 },
+        { header: "Order Date", key: "createdAt", width: 20 },
     ];
     
     let orders = await Order.findAll({
+        attributes: ["codeOrder", "courierJne", "address", "weight", "costCourier", "subtotal", [sequelize.fn('DATE_FORMAT', sequelize.col('`Order`.`createdAt`'), "%d-%m-%Y %H:%i:%s"), 'orderDate']],
         include: [{
-            model: Customer
+            model: Customer,
+            attributes: ["id", "firstName", "lastName", "developerId"]
         }],
         where: {
-            '$developerId$': dev.id
+            '$developerId$': 5
         },
-    })
+    });
 
     orders.forEach((o) => {
         let new_row = {
@@ -41,9 +47,10 @@ const ExportOrder = async (req, res) => {
             customer: o.Customer.firstName + ' ' + o.Customer.lastName,
             courier: "JNE" + " - " + o.courierJne,
             address: o.address,
-            weight: o.weight,
+            weight: o.weight.toString(),
             costCourier: o.costCourier,
             subtotal: o.subtotal,
+            createdAt: o.dataValues.orderDate,
         }
         worksheet.addRow(new_row);
     });
