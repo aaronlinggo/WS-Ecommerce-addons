@@ -423,6 +423,12 @@ async function addToCart(req, res) {
 }
 
 async function addReview(req,res){
+    
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
+    }
+
     try{
         let {customerId} = req.params;
         let {codeOrderDetail,rating,comment} = req.body;
@@ -430,13 +436,17 @@ async function addReview(req,res){
         //Cek customer yang review benar telah pesan produk
         let checkPesanan = await OrderDetail.findAll({
             include : [{
-                model : Order
+                model : Order,
+                where : {
+                    customerId : customerId
+                },
+                required : true
             }],
             where :{
                 codeOrderDetail : codeOrderDetail,
-                customerId : customerId
             }
         });
+
 
         if(checkPesanan.length==0){
             return res.status(400).send({
@@ -445,7 +455,26 @@ async function addReview(req,res){
         }
 
         //Review Product
-        //Kalau sdh pernah review gimana? update review? gk bisa review lagi ?
+        //Kalau sdh pernah gk bisa review lagi 
+
+        let sudahReview = await Review.findOne({
+            where : {
+                customerId : customerId,
+                codeOrderDetail : codeOrderDetail
+            }
+        });
+        // return res.status(400).send({
+        //     msg : sudahReview
+        // });
+
+        if(sudahReview){
+            return res.status(400).send({
+                message : `Anda sudah pernah review produk ini di orderan ini!`
+            });
+        }
+
+        //Kalau blm pernah review buat review baru
+
         await Review.create({
             rating : rating,
             customerId : customerId,
@@ -457,15 +486,17 @@ async function addReview(req,res){
 
         let produkNow = await Product.findOne({
             include : [{
-                model : OrderDetail
-            }],
-            where:{
-                codeOrderDetail : codeOrderDetail
-            }
+                model : OrderDetail,
+                where : {
+                    codeOrderDetail : codeOrderDetail
+                },
+                required : true
+            }]
         });
 
         return res.status(201).send({
-            message : `Berhasil submit review untuk produk ${produkNow.name} dengan rating ${rating}/5 `
+            message : `Berhasil submit review untuk produk ${produkNow.name} dengan rating ${rating}/5 `,
+            comment : comment
         });
 
     }catch(e){
