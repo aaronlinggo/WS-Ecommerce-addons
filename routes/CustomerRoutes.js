@@ -103,7 +103,8 @@ router.post("/checkout/:customerId",
             return Promise.reject("Kode kota tujuan hanya boleh dari 1-500");
         }
         return true;
-    })
+    }),
+    check("address").not().isEmpty().withMessage("address Harus diisi!")
     , CCustomer.checkOut);
 
 //ADD TO CART
