@@ -23,6 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       customerId: DataTypes.INTEGER,
       courierJne: DataTypes.ENUM(["OKE", "REG", "SPS", "YES"]),
+      address: DataTypes.STRING,
       origin: DataTypes.STRING,
       destination: DataTypes.STRING,
       weight: DataTypes.INTEGER,

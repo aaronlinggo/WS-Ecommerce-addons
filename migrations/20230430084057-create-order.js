@@ -21,6 +21,10 @@ module.exports = {
         allowNull: false,
         type: Sequelize.ENUM(['OKE','REG','SPS','YES'])
       },
+      address: {
+        allowNull: false,
+        type: Sequelize.STRING
+      },
       origin: {
         allowNull: false,
         type: Sequelize.STRING
