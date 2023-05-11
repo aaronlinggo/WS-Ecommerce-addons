@@ -120,11 +120,11 @@ router.post("/addToCart/:customerId",
     })
     , CCustomer.addToCart);
 
-//REVIEW PRODUCT
+//ADD REVIEW
 //params =  customerId (1-20)
-//body =    quantity (1 atau 1,2,3,4,....), 
-//          codeProduct (WSEC00002 / WSEC00001,WSEC00003), 
-//          nameProduct (Small Fresh Car / Small Fresh Car,Electronic Steel Car)
+//body =    rating (1 - 5), 
+//          comment (isi review), 
+//          codeOrderDetail (PK Order Detail)
 router.post("/review/:customerId",
 check("customerId").custom((value) => {
     return Customer.findOne({ where: { id: value } }).then((user) => {
