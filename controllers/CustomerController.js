@@ -27,8 +27,18 @@ async function viewOrder(req, res) {
         //Cari semua order dari user yg login
 
         result = await Order.findAll({
-            attributes: [['codeOrder', 'Code Order'], ['origin', 'Asal'], ['destination', 'Tujuan'], ['courierJne', 'Layanan'], ['costCourier', 'Ongkos Kirim']]
+            attributes: [
+                ['codeOrder', 'Code Order'], 
+                ['origin', 'Asal'], 
+                ['destination', 'Tujuan'], 
+                ['address', 'Alamat'],
+                ['courierJne', 'Layanan'], 
+                ['costCourier', 'Ongkos Kirim']]
         }, {
+            include : [{
+                model : OrderDetail,
+                attributes : [[]]
+            }],
             where: {
                 customerId: req.params.customerId
             }
@@ -38,7 +48,13 @@ async function viewOrder(req, res) {
         //Cari order itu saja
 
         result = await Order.findAll({
-            attributes: [['codeOrder', 'Code Order'], ['origin', 'Asal'], ['destination', 'Tujuan'], ['courierJne', 'Layanan'], ['costCourier', 'Ongkos Kirim']]
+            attributes: [
+                ['codeOrder', 'Code Order'], 
+                ['origin', 'Asal'], 
+                ['destination', 'Tujuan'], 
+                ['address', 'Alamat'],
+                ['courierJne', 'Layanan'], 
+                ['costCourier', 'Ongkos Kirim']]
         }, {
             where: {
                 codeOrder: req.body.codeOrder
@@ -475,24 +491,36 @@ async function addReview(req,res){
 
         //Kalau blm pernah review buat review baru
 
-        await Review.create({
-            rating : rating,
-            customerId : customerId,
-            comment : comment,
-            createdAt : new Date(),
-            updatedAt : new Date(),
-            codeOrderDetail : codeOrderDetail
+        // await Review.create({
+        //     rating : rating,
+        //     customerId : customerId,
+        //     comment : comment,
+        //     createdAt : new Date(),
+        //     updatedAt : new Date(),
+        //     codeOrderDetail : codeOrderDetail
+        // });
+
+        let produkNow = await Product.findAll({
+            // include : [{
+            //     model : OrderDetail,
+            //     where : {
+            //         codeOrderDetail : codeOrderDetail
+            //     },
+            //     required : true
+            // }]
         });
 
-        let produkNow = await Product.findOne({
-            include : [{
-                model : OrderDetail,
-                where : {
-                    codeOrderDetail : codeOrderDetail
-                },
-                required : true
-            }]
+        let a = await Product.findAll({
+            // include : [{
+            //     model : OrderDetail,
+                // where : {
+                //     codeProduct : "WSEC00001"
+                // },
+            //     required : true
+            // }]
         });
+
+        return res.status(201).send({msg : a});
 
         return res.status(201).send({
             message : `Berhasil submit review untuk produk ${produkNow.name} dengan rating ${rating}/5 `,
