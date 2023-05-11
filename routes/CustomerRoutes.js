@@ -85,25 +85,25 @@ router.post("/checkout/:customerId",
         })
     }),
     check("courierJne").custom((value) => {
-        if (value == "OKE" || value == "REG" || value == "SPS" || value == "YES") {
+        if (value == "OKE" || value == "REG") {
             return true;
         }
         else {
             return Promise.reject("Layanan yang tersedia hanya OKE,REG,SPS,YES");
         }
     }),
-    check("origin").custom((value) => {
-        if (value < 1 || value > 500) {
-            return Promise.reject("Kode kota asal hanya boleh dari 1-500");
-        }
-        return true;
-    }),
-    check("destination").custom((value) => {
-        if (value < 1 || value > 500) {
-            return Promise.reject("Kode kota tujuan hanya boleh dari 1-500");
-        }
-        return true;
-    }),
+    // check("origin").custom((value) => {
+    //     if (value < 1 || value > 500) {
+    //         return Promise.reject("Kode kota asal hanya boleh dari 1-500");
+    //     }
+    //     return true;
+    // }),
+    // check("destination").custom((value) => {
+    //     if (value < 1 || value > 500) {
+    //         return Promise.reject("Kode kota tujuan hanya boleh dari 1-500");
+    //     }
+    //     return true;
+    // }),
     check("address").not().isEmpty().withMessage("address Harus diisi!")
     , CCustomer.checkOut);
 
