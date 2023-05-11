@@ -234,7 +234,7 @@ async function checkOut(req, res) {
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-    let { courierJne, origin, destination } = req.body;
+    let { courierJne, origin, destination, address } = req.body;
     let { customerId } = req.params;
 
     try {
@@ -282,6 +282,7 @@ async function checkOut(req, res) {
                 if (s.service == courierJne)
                     return s
             });
+            return res.status(200).send({ message: costResult.data.rajaongkir.results[0].costs });
 
             await Order.create({
                 codeOrder: id,
