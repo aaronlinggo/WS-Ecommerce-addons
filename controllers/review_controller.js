@@ -1,14 +1,45 @@
-const { Review, Order, Customer, Product, OrderDetail } = require('../models');
+const {
+	Review,
+	Order,
+	Customer,
+	Product,
+	OrderDetail
+} = require('../models');
 
 // NOMOR 10
-const seeAllReview = async (req, res) => {
+const getAllReview = async (req, res) => {
+	let { sortByRating, sortByCreatedAt } = req.query;
+	var data_all_review;
+
 	try {
-		let data_all_review = await Review.findAll({
-			include: [
-				{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-				{ model: Customer },
-			],
-		});
+		if (sortByRating) {
+			data_all_review = await Review.findAll({
+				include: [
+					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+					{ model: Customer },
+				],
+				order: [['rating', sortByRating.toUpperCase()]],
+			});
+		} else if (sortByCreatedAt) {
+			data_all_review = await Review.findAll({
+				include: [
+					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+					{ model: Customer },
+				],
+				order: [['createdAt', sortByCreatedAt.toUpperCase()]],
+			});
+		} else {
+			data_all_review = await Review.findAll({
+				include: [
+					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+					{ model: Customer },
+				],
+				order: [
+					['rating', 'DESC'],
+					['createdAt', 'DESC'],
+				],
+			});
+		}
 
 		const output = {
 			status: 200,
@@ -31,5 +62,5 @@ const seeAllReview = async (req, res) => {
 };
 
 module.exports = {
-	seeAllReview,
+	getAllReview,
 };
