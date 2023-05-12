@@ -27,21 +27,29 @@ const router = express.Router();
 
 router.get("/viewOrder/:customerId",
     check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
+        return Customer.findOne({
+            where: {
+                id: value
+            }
+        }).then((user) => {
             if (!user) {
                 return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
             }
         })
     }),
     check("codeOrder").optional().custom((value) => {
-        return Order.findOne({ where: { codeOrder: value } }).then((order) => {
+        return Order.findOne({
+            where: {
+                codeOrder: value
+            }
+        }).then((order) => {
             if (!order) {
                 return Promise.reject("Orderan dengan kode tersebut tidak ditemukan");
             }
         })
     }),
     check("statusOrder").optional().custom((value) => {
-        if (value!="PENDING" && value!="PROCESS" && value!="DELIVERED" && value!="CANCEL") {
+        if (value != "PENDING" && value != "PROCESS" && value != "DELIVERED" && value != "CANCEL") {
             return Promise.reject("Status order hanya boleh diisi dengan (PENDING,PROCESS,DELIVERED,CANCEL)");
         }
         return true;
@@ -54,7 +62,11 @@ router.get("/viewOrder/:customerId",
 //body   =  codeOrder
 router.post("/pay/:customerId",
     check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
+        return Customer.findOne({
+            where: {
+                id: value
+            }
+        }).then((user) => {
             if (!user) {
                 return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
             }
@@ -62,13 +74,16 @@ router.post("/pay/:customerId",
     }),
     check("codeOrder").not().isEmpty().withMessage("codeOrder harus diisi!"),
     check("codeOrder").custom((value) => {
-        return Order.findOne({ where: { codeOrder: value } }).then((order) => {
+        return Order.findOne({
+            where: {
+                codeOrder: value
+            }
+        }).then((order) => {
             if (!order) {
                 return Promise.reject("Order dengan kode tersebut tidak ditemukan");
             }
         })
-    })
-    , CCustomer.payOrder);
+    }), CCustomer.payOrder);
 
 //Check Out
 //params =  customerId (1-20)
@@ -78,7 +93,11 @@ router.post("/pay/:customerId",
 
 router.post("/checkout/:customerId",
     check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
+        return Customer.findOne({
+            where: {
+                id: value
+            }
+        }).then((user) => {
             if (!user) {
                 return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
             }
@@ -87,8 +106,7 @@ router.post("/checkout/:customerId",
     check("courierJne").custom((value) => {
         if (value == "OKE" || value == "REG" || value == "SPS" || value == "YES") {
             return true;
-        }
-        else {
+        } else {
             return Promise.reject("Layanan yang tersedia hanya OKE,REG,SPS,YES");
         }
     }),
@@ -104,8 +122,7 @@ router.post("/checkout/:customerId",
         }
         return true;
     }),
-    check("address").not().isEmpty().withMessage("address Harus diisi!")
-    , CCustomer.checkOut);
+    check("address").not().isEmpty().withMessage("address Harus diisi!"), CCustomer.checkOut);
 
 //ADD TO CART
 //params =  customerId (1-20)
@@ -114,7 +131,11 @@ router.post("/checkout/:customerId",
 //          nameProduct (Small Fresh Car / Small Fresh Car,Electronic Steel Car)
 router.post("/addToCart/:customerId",
     check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
+        return Customer.findOne({
+            where: {
+                id: value
+            }
+        }).then((user) => {
             if (!user) {
                 return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
             }
@@ -125,15 +146,13 @@ router.post("/addToCart/:customerId",
         let panjangQty = value.split(",");
         for (let i = 0; i < panjangQty.length; i++) {
             let number = +panjangQty[i];
-            if (number) {
-            } else {
+            if (number) {} else {
                 return Promise.reject("Quantity hanya boleh berisi angka (1,2,...)!");
             }
             // return Promise.reject(panjangQty.length);
         }
         return true;
-    })
-    , CCustomer.addToCart);
+    }), CCustomer.addToCart);
 
 //ADD REVIEW
 //params =  customerId (1-20)
@@ -142,21 +161,33 @@ router.post("/addToCart/:customerId",
 //          codeOrderDetail (PK Order Detail)
 router.post("/review/:customerId",
     check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
+        return Customer.findOne({
+            where: {
+                id: value
+            }
+        }).then((user) => {
             if (!user) {
                 return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
             }
         })
     }),
-    check("rating").isInt({ min: 1, max: 5 }).withMessage("Rating harus berupa angka dari 1-5!"),
+    check("rating").isInt({
+        min: 1,
+        max: 5
+    }).withMessage("Rating harus berupa angka dari 1-5!"),
     check("comment").notEmpty().withMessage("Comment haruss diisi!"),
     check("codeOrderDetail").custom((value) => {
-        return OrderDetail.findOne({ where: { codeOrderDetail: value } }).then((orderDetail) => {
+        return OrderDetail.findOne({
+            where: {
+                codeOrderDetail: value
+            }
+        }).then((orderDetail) => {
             if (!orderDetail) {
                 return Promise.reject("Order detail dengan code tersebut tidak ditemukan");
             }
         })
-    })
-    , CCustomer.addReview);
+    }), CCustomer.addReview);
+
+router.get("/customers", authMiddleware.developerMiddleware, CCustomer.getAll);
 
 module.exports = router;
