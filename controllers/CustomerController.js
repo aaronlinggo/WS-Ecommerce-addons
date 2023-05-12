@@ -8,6 +8,7 @@ const Customer = require("../models").Customer;
 const Developer = require("../models").Developer;
 const axios = require("axios").default;
 const jwt = require('jsonwebtoken');
+
 require("dotenv").config();
 const formatRupiah = require('../helpers/formatRupiah');
 const {
@@ -31,7 +32,6 @@ async function viewOrder(req, res) {
 
     let result;
     try {
-        let orderList = [];
         if (!sortStatusOrder) {
             sortStatusOrder = "ASC";
         }
@@ -46,76 +46,85 @@ async function viewOrder(req, res) {
             //Cari semua order dari user yg login
 
             if (statusOrder) {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)'],
-                        ['$Payment.codeOrder', 'Payment Status']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    },{
-                        model : Payment,
-                        as : 'Payment'
-                    }],
-                    where: {
-                        customerId: customerId,
-                        statusOrder: statusOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                customerId: customerId,                                
+                                statusOrder: statusOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             } else {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)'],
-                        ['$Payment.codeOrder$', 'Payment Status']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        as : 'OrderDetails',
-                        attributes: [['quantity', 'Quantity']],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    },{
-                        model : Payment,
-                        as : 'Payment'
-                    }],
-                    where: {
-                        customerId: customerId
-                    },
-                    order: [
-                        ['statusOrder', sortStatusOrder],
-                        ['subtotal', sortSubtotal]
-                    ]
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                customerId: customerId
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             }
         } else {
@@ -137,83 +146,86 @@ async function viewOrder(req, res) {
                 });
             }
 
-            if (statusOrder) {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: Payment,
-                        attributes: [
-                            ['paymentStatus', 'Payment Status']
-                        ],
-                        order: [
-                            ['paymentStatus', sortStatusPayment]
-                        ]
-                    },{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+            if (statusOrder) {                
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        customerId: customerId,
-                        statusOrder: statusOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                statusOrder : statusOrder,
+                                codeOrder : codeOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             } else {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: Payment,
-                        attributes: [
-                            ['paymentStatus', 'Payment Status'],
-                            ['codeOrder', 'Payment Stus'],
-                        ],
-                        order: [
-                            ['paymentStatus', sortStatusPayment]
-                        ]
-                    },{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        codeOrder: codeOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                codeOrder : codeOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             }
         }
@@ -328,15 +340,15 @@ async function checkOut(req, res) {
 
             const costResult = await axios.post(
                 "https://api.rajaongkir.com/starter/cost", {
-                    "origin": origin,
-                    "destination": destination,
-                    "weight": totalWeight,
-                    "courier": "jne"
-                }, {
-                    headers: {
-                        key: process.env.RAJAONGKIR_KEY,
-                    }
+                "origin": origin,
+                "destination": destination,
+                "weight": totalWeight,
+                "courier": "jne"
+            }, {
+                headers: {
+                    key: process.env.RAJAONGKIR_KEY,
                 }
+            }
             );
 
             var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
@@ -740,6 +752,66 @@ async function addReview(req, res) {
         });
     }
 }
+
+async function viewCart(req, res) {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
+    }
+
+    try {
+        let { customerId } = req.params;
+
+        //View Cart
+        //Kalau sdh pernah gk bisa review lagi 
+
+        let result = await Cart.findAll({
+            include : [{
+                model : Product,
+                as : 'Product',
+                attributes : [
+                    'codeProduct',
+                    'name',
+                    'price',
+                    'weight',
+                ]
+            }],
+            where: {
+                customerId: customerId
+            }
+        });
+
+        if(result.length==0){
+            return res.status(400).send({
+                message: "Cart kamu kosong!"
+            });    
+        }
+
+        let total = 0;
+        let subtotal = 0;
+        return res.status(400).send({msg:result});
+
+        for (let i = 0; i < result.length; i++) {
+            subtotal=0;
+            let temp = result[i].quantity*result[i].Product.price;
+            return res.status(400).send({msg:temp});
+            for (let j = 0; j < result[i].Product.length; j++) {
+                
+            }
+        }
+
+        return res.status(200).send({
+            message: result
+        });
+
+    } catch (e) {
+        return res.status(500).send({
+            message: e.toString()
+        });
+    }
+}
+
 const getAll = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
@@ -884,5 +956,6 @@ module.exports = {
     checkOut,
     addToCart,
     addReview,
-    getAll
+    getAll,
+    viewCart
 }
