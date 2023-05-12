@@ -17,7 +17,6 @@ const ExportOrder = async (req, res) => {
 
     const workbook = new excelJS.Workbook();
     const worksheet = workbook.addWorksheet("My Order")
-    const path = "./files";
     
     worksheet.columns = [
         { header: "Code Order", key: "codeOrder", width: 15 },
@@ -28,16 +27,17 @@ const ExportOrder = async (req, res) => {
         { header: "Cost Courier", key: "costCourier", width: 15 },
         { header: "Subtotal", key: "subtotal", width: 10 },
         { header: "Order Date", key: "createdAt", width: 20 },
+        { header: "Status Order", key: "statusOrder", width: 15 },
     ];
     
     let orders = await Order.findAll({
-        attributes: ["codeOrder", "courierJne", "address", "weight", "costCourier", "subtotal", [sequelize.fn('DATE_FORMAT', sequelize.col('`Order`.`createdAt`'), "%d-%m-%Y %H:%i:%s"), 'orderDate']],
+        attributes: ["codeOrder", "courierJne", "address", "weight", "costCourier", "subtotal", [sequelize.fn('DATE_FORMAT', sequelize.col('`Order`.`createdAt`'), "%d-%m-%Y %H:%i:%s"), 'orderDate'], "statusOrder"],
         include: [{
             model: Customer,
             attributes: ["id", "firstName", "lastName", "developerId"]
         }],
         where: {
-            '$developerId$': 5
+            '$developerId$': dev.id
         },
     });
 
@@ -51,6 +51,7 @@ const ExportOrder = async (req, res) => {
             costCourier: o.costCourier,
             subtotal: o.subtotal,
             createdAt: o.dataValues.orderDate,
+            statusOrder: o.statusOrder,
         }
         worksheet.addRow(new_row);
     });
