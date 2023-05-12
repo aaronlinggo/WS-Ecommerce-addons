@@ -7,6 +7,14 @@ const Product = require('../models').Product;
 const formatRupiah = require("../helpers/formatRupiah");
 const Developer = require('../models').Developer;
 const fs = require("fs");
+const fastCsv = require("fast-csv");
+const options = {
+    objectMode: true,
+    delimiter: ",",
+    quote: null,
+    headers: true,
+    renameHeaders: false,
+};
 const {
     Op
 } = require('sequelize');
@@ -17,7 +25,7 @@ const getAll = async (req, res) => {
     var ascdescprice = req.query.price;
     var ascdescstock = req.query.stock;
     //pagination
-    var page = parseFloat(req.query.page)|| 1;
+    var page = parseFloat(req.query.page) || 1;
     var pageSize = parseFloat(req.query.pageSize) || 10;
     var offset = (page - 1) * pageSize;
     // console.log(page + '-' + pageSize + '- ' + offset);
@@ -162,7 +170,13 @@ const getAll = async (req, res) => {
     }
 
 }
+const bulkAddProduct = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
+    const data = [];
+    const readableStream = fs.createReadStream("data.csv");
 
+}
 const addProduct = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
@@ -225,6 +239,7 @@ const editProduct = async (req, res) => {
         }
     });
 
+    //untuk hapus foto
     // let namafile = product.photo;
     // fs.unlinkSync('.' + namafile);
 
@@ -332,6 +347,7 @@ const getDetailProduct = async (req, res) => {
 module.exports = {
     getAll,
     addProduct,
+    bulkAddProduct,
     editProduct,
     deleteProduct,
     getDetailProduct
