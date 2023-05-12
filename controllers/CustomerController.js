@@ -767,14 +767,17 @@ async function viewCart(req, res) {
         //Kalau sdh pernah gk bisa review lagi 
 
         let result = await Cart.findAll({
+            attributes :[
+                ['quantity','Quantity_in_cart']
+            ],
             include : [{
                 model : Product,
                 as : 'Product',
                 attributes : [
-                    'codeProduct',
-                    'name',
-                    'price',
-                    'weight',
+                    ['codeProduct','Product Code'],
+                    ['name','Product Name'],
+                    ['price','Product Price'],
+                    ['weight','Product Weight'],
                 ]
             }],
             where: {
@@ -787,22 +790,8 @@ async function viewCart(req, res) {
                 message: "Cart kamu kosong!"
             });    
         }
-
-        let total = 0;
-        let subtotal = 0;
-        return res.status(400).send({msg:result});
-
-        for (let i = 0; i < result.length; i++) {
-            subtotal=0;
-            let temp = result[i].quantity*result[i].Product.price;
-            return res.status(400).send({msg:temp});
-            for (let j = 0; j < result[i].Product.length; j++) {
-                
-            }
-        }
-
         return res.status(200).send({
-            message: result
+            cart: result
         });
 
     } catch (e) {
