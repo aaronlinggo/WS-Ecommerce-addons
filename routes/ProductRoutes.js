@@ -24,28 +24,28 @@ const storage = multer.diskStorage({
         })
         callback(null, path)
     },
-    filename: function (req, file, callback) {
-        callback(null, file.originalname);
+    filename: async function (req, file, callback) {
+        if (req.params.id == null) {
+            let products = await Product.findOne({
+                order: [
+                    ["codeProduct", "DESC"]
+                ],
+                limit: 1,
+            });
+            var temp = products.codeProduct;
+            var angkaterakhir = parseInt(temp.slice(4, 9));
+            var code = "WSEC" + ((angkaterakhir + 1) + "").padStart(5, '0');
+            callback(null, code + '.jpg');
+        } else {
+            callback(null, req.params.id + '.jpg');
+        }
     }
 });
 var upd = multer({
     storage: storage
 });
 
-router.get('/:nama?',
-    check("nama").optional({
-        nullable: true
-    }).custom((value) => {
-        return Product.findOne({
-            where: {
-                name: value
-            }
-        }).then((ps) => {
-            if (!ps) {
-                return Promise.reject("Product Not Found");
-            }
-        })
-    }), validationMiddleware, authMiddleware.developerMiddleware, productController.getAll);
+router.get('/', validationMiddleware, authMiddleware.developerMiddleware, productController.getAll);
 
 router.post('/', upd.single('photo'),
     check('photo')
