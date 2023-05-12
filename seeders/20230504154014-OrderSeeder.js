@@ -11,10 +11,12 @@ module.exports = {
         address: 'Jln. Ngagel ABC 123',
         origin: 'SUB',
         destination: 'JKT',
-        weight: 1,
+        weight: 1000,
         costCourier: 14000,
-        subtotal: 28000,
+        subtotal: 14000,
         statusOrder: 'PENDING',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       },
       {
         codeOrder: 'OR00002',
@@ -23,10 +25,12 @@ module.exports = {
         address: 'Jln. Ngagel ABC 123',
         origin: 'SUB',
         destination: 'JKT',
-        weight: 1,
-        costCourier: 14000,
-        subtotal: 28000,
+        weight: 1500,
+        costCourier: 20000,
+        subtotal: 30000,
         statusOrder: 'PENDING',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       },
     ]);
   },

@@ -16,6 +16,7 @@ const review_routes = require("./routes/review_routes");
 const order_routes = require("./routes/order_routes");
 const subscription = require("./routes/SubscriptionRoutes");
 const rajaongkir = require("./routes/RajaOngkirRoutes");
+const developer = require("./routes/DeveloperRoutes");
 
 const port = 3000;
 
@@ -33,6 +34,7 @@ app.use("/api/reviewRoutes", review_routes);
 app.use("/api/orderRoutes", order_routes);
 app.use("/api/subscription", subscription);
 app.use("/api/rajaongkir", rajaongkir);
+app.use("/api/developer/order", developer);
 
 cron.schedule('0 0 * * *', async function () {
     console.log("Checking expired subscription!");

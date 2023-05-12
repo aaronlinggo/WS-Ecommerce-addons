@@ -7,20 +7,22 @@ const Product = require('../models').Product;
 const formatRupiah = require("../helpers/formatRupiah");
 const Developer = require('../models').Developer;
 const fs = require("fs");
-
+const {
+    Op
+} = require('sequelize');
 const getAll = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
-    var namaprod = req.params.nama; //buat search
+    var namaprod = req.query.nama; //buat search
     var ascdescprice = req.query.price;
     var ascdescstock = req.query.stock;
     //pagination
-    var page = parseFloat(req.query.page);
-    var pageSize = parseFloat(req.query.pageSize);
+    var page = parseFloat(req.query.page)|| 1;
+    var pageSize = parseFloat(req.query.pageSize) || 10;
     var offset = (page - 1) * pageSize;
-    console.log(page + '-' + pageSize + '- ' + offset);
+    // console.log(page + '-' + pageSize + '- ' + offset);
     if (namaprod) {
-        let product = await Product.findOne({
+        let products = await Product.findAll({
             attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
             include: [{
                 model: Developer,
@@ -30,20 +32,26 @@ const getAll = async (req, res) => {
             }],
             where: {
                 developerId: dev.id,
-                name: namaprod
-            }
+                name: {
+                    [Op.like]: '%' + namaprod + '%'
+                }
+            },
+            limit: pageSize,
+            offset: offset
         });
-        var hasil = {
-            "Product Code": product.codeProduct,
-            "Name": product.name,
-            "Price": product.price,
-            "Weight": product.weight,
-            "Photo": product.photo,
-            "Stock": product.stock,
-            "Description": product.description,
-            "Developer Name": product["Developer"]["dataValues"]["developer_name"]
-        }
-        return res.formatter.ok(hasil);
+        products = products.map(p => {
+            return {
+                "Product Code": p.codeProduct,
+                "Name": p.name,
+                "Price": formatRupiah(p.price),
+                "Weight": p.weight + " gram",
+                "Photo": p.photo,
+                "Stock": p.stock,
+                "Description": p.description,
+                "Developer Name": p["Developer"]["dataValues"]["developer_name"]
+            };
+        })
+        return res.formatter.ok(products);
     } else {
         let products = await Product.findAll({
             attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
@@ -74,7 +82,9 @@ const getAll = async (req, res) => {
                     },
                     order: [
                         ['price', 'ASC']
-                    ]
+                    ],
+                    limit: pageSize,
+                    offset: offset
                 });
             } else if (ascdescprice.toUpperCase() == "DESC") {
                 products = await Product.findAll({
@@ -90,7 +100,9 @@ const getAll = async (req, res) => {
                     },
                     order: [
                         ['price', 'DESC']
-                    ]
+                    ],
+                    limit: pageSize,
+                    offset: offset
                 });
             }
         }
@@ -110,7 +122,9 @@ const getAll = async (req, res) => {
                     },
                     order: [
                         ['stock', 'ASC']
-                    ]
+                    ],
+                    limit: pageSize,
+                    offset: offset
                 });
             } else if (ascdescstock.toUpperCase() == "DESC") {
                 products = await Product.findAll({
@@ -126,7 +140,9 @@ const getAll = async (req, res) => {
                     },
                     order: [
                         ['stock', 'DESC']
-                    ]
+                    ],
+                    limit: pageSize,
+                    offset: offset
                 });
             }
         }
@@ -165,7 +181,7 @@ const addProduct = async (req, res) => {
     var temp = products.codeProduct;
     var angkaterakhir = parseInt(temp.slice(4, 9));
     var code = "WSEC" + ((angkaterakhir + 1) + "").padStart(5, '0');
-    var namafilephoto = photo.originalname;
+    var namafilephoto = code + ".jpg";
     var path = "/storage/" + dev.username + "/" + namafilephoto;
     var newProduct = await Product.create({
         codeProduct: code,
@@ -182,7 +198,7 @@ const addProduct = async (req, res) => {
         "ID Developer": dev.id,
         "Name": name,
         "Price": formatRupiah(price),
-        "Weight": weight+" gram",
+        "Weight": weight + " gram",
         "Photo": path,
         "Stock": stock,
         "Description": description
@@ -200,7 +216,7 @@ const editProduct = async (req, res) => {
     var photo = req.file;
     var stock = req.body.stock;
     var description = req.body.description;
-    var photos = photo.originalname;
+    var photos = codeProduct + ".jpg";
     var path = "/storage/" + dev.username + "/" + photos;
     let product = await Product.findOne({
         attributes: ['photo'],
@@ -209,8 +225,8 @@ const editProduct = async (req, res) => {
         }
     });
 
-    let namafile = product.photo;
-    fs.unlinkSync('.' + namafile);
+    // let namafile = product.photo;
+    // fs.unlinkSync('.' + namafile);
 
     await Product.update({
         name: name,
@@ -294,8 +310,7 @@ const getDetailProduct = async (req, res) => {
             developerId: dev.id
         }
     });
-    if(product.length<=0)
-    {
+    if (product.length <= 0) {
         var hasil = {
             message: "Product Not Found!"
         }

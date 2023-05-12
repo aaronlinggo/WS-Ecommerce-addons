@@ -7,12 +7,16 @@ module.exports = {
       {
         codeOrder: 'OR00001',
         codeProduct: 'WSEC00001',
-        quantity: 1
+        quantity: 1,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       },
       {
         codeOrder: 'OR00002',
         codeProduct: 'WSEC00002',
-        quantity: 1
+        quantity: 1,
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       },
     ]);
   },

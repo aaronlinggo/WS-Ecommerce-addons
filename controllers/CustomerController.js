@@ -4,26 +4,30 @@ const Payment = require('../models').Payment;
 const Product = require('../models').Product;
 const Cart = require('../models').Cart;
 const Review = require('../models').Review;
-
-
+const Customer = require("../models").Customer;
+const Developer = require("../models").Developer;
 const axios = require("axios").default;
+const jwt = require('jsonwebtoken');
 require("dotenv").config();
 const formatRupiah = require('../helpers/formatRupiah');
-
 const {
     validationResult
 } = require("express-validator");
-const order = require('../models/order');
-
+const {
+    Op
+} = require('sequelize');
+const {
+    sequelize
+} = require('../models');
 async function viewOrder(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-
     let { customerId } = req.params;
     let { codeOrder, statusOrder } = req.body;
     let { sortStatusOrder, sortStatusPayment, sortSubtotal } = req.query;
+
 
     let result;
     try {
@@ -56,7 +60,9 @@ async function viewOrder(req, res) {
                     ],
                     include: [{
                         model: OrderDetail,
-                        attributes: [['quantity', 'Quantity']],
+                        attributes: [
+                            ['quantity', 'Quantity']
+                        ],
                         include: [{
                             model: Product,
                             attributes: [
@@ -74,8 +80,7 @@ async function viewOrder(req, res) {
                         statusOrder: statusOrder
                     }
                 });
-            }
-            else {
+            } else {
                 result = await Order.findAll({
                     attributes: [
                         ['codeOrder', 'Code Order'],
@@ -154,7 +159,9 @@ async function viewOrder(req, res) {
                         ]
                     },{
                         model: OrderDetail,
-                        attributes: [['quantity', 'Quantity']],
+                        attributes: [
+                            ['quantity', 'Quantity']
+                        ],
                         include: [{
                             model: Product,
                             attributes: [
@@ -169,8 +176,7 @@ async function viewOrder(req, res) {
                         statusOrder: statusOrder
                     }
                 });
-            }
-            else {
+            } else {
                 result = await Order.findAll({
                     attributes: [
                         ['codeOrder', 'Code Order'],
@@ -193,7 +199,9 @@ async function viewOrder(req, res) {
                         ]
                     },{
                         model: OrderDetail,
-                        attributes: [['quantity', 'Quantity']],
+                        attributes: [
+                            ['quantity', 'Quantity']
+                        ],
                         include: [{
                             model: Product,
                             attributes: [
@@ -216,7 +224,9 @@ async function viewOrder(req, res) {
             order: result
         });
     } catch (e) {
-        return res.status(500).send({ message: e.toString() });
+        return res.status(500).send({
+            message: e.toString()
+        });
     }
 }
 
@@ -227,8 +237,12 @@ async function payOrder(req, res) {
     }
 
     let result;
-    let { customerId } = req.params;
-    let { codeOrder } = req.body;
+    let {
+        customerId
+    } = req.params;
+    let {
+        codeOrder
+    } = req.body;
     // Ubah status di tabel payments untuk codeOrder
 
     //Cek yang login benar punya orderan itu
@@ -274,8 +288,15 @@ async function checkOut(req, res) {
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-    let { courierJne, origin, destination, address } = req.body;
-    let { customerId } = req.params;
+    let {
+        courierJne,
+        origin,
+        destination,
+        address
+    } = req.body;
+    let {
+        customerId
+    } = req.params;
 
     try {
         //Buat id order
@@ -296,9 +317,10 @@ async function checkOut(req, res) {
 
         if (cart.length == 0) {
             //status 200? atau brp?
-            return res.status(200).send({ message: "Cart anda kosong, minimal terdapat 1 barang di cart!" });
-        }
-        else {
+            return res.status(200).send({
+                message: "Cart anda kosong, minimal terdapat 1 barang di cart!"
+            });
+        } else {
             for (let i = 0; i < cart.length; i++) {
                 subtotal += cart[i].Product.price * cart[i].quantity;
                 totalWeight += cart[i].Product.weight;
@@ -306,12 +328,11 @@ async function checkOut(req, res) {
 
             const costResult = await axios.post(
                 "https://api.rajaongkir.com/starter/cost", {
-                "origin": origin,
-                "destination": destination,
-                "weight": totalWeight,
-                "courier": "jne"
-            },
-                {
+                    "origin": origin,
+                    "destination": destination,
+                    "weight": totalWeight,
+                    "courier": "jne"
+                }, {
                     headers: {
                         key: process.env.RAJAONGKIR_KEY,
                     }
@@ -324,8 +345,6 @@ async function checkOut(req, res) {
                     return s
                 }
             });
-            // return res.status(200).send({ message: servicesCourier });
-            // return res.status(200).send({ message: costResult.data.rajaongkir.results[0].costs });
 
             await Order.create({
                 codeOrder: id,
@@ -404,7 +423,9 @@ async function checkOut(req, res) {
         }
 
     } catch (e) {
-        return res.status(500).send({ message: e.toString() });
+        return res.status(500).send({
+            message: e.toString()
+        });
     }
 }
 
@@ -414,14 +435,24 @@ async function addToCart(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let { quantity, codeProduct, nameProduct } = req.body;
-    let { customerId } = req.params;
+    let {
+        quantity,
+        codeProduct,
+        nameProduct
+    } = req.body;
+    let {
+        customerId
+    } = req.params;
 
     if (!req.body.codeProduct && !req.body.nameProduct) {
-        return res.status(400).send({ message: "Salah satu codeProduct atau namaProduct harus diisi!" });
+        return res.status(400).send({
+            message: "Salah satu codeProduct atau namaProduct harus diisi!"
+        });
     }
     if (req.body.codeProduct && req.body.nameProduct) {
-        return res.status(400).send({ message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!" });
+        return res.status(400).send({
+            message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!"
+        });
     }
 
     try {
@@ -434,7 +465,9 @@ async function addToCart(req, res) {
             let panjangCode = codeProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangCode.length != panjangQty.length) {
-                return res.status(400).send({ message: "Panjang quantity dan panjang codeProduct tidak sama!" });
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang codeProduct tidak sama!"
+                });
             }
             //Pengecekan
             for (let i = 0; i < panjangCode.length; i++) {
@@ -445,11 +478,15 @@ async function addToCart(req, res) {
                 });
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.status(404).send({ message: `Produk dengan code ${panjangCode[i]} tidak ditemukan` });
+                    return res.status(404).send({
+                        message: `Produk dengan code ${panjangCode[i]} tidak ditemukan`
+                    });
                 }
                 //Cek stok cukup gak
                 if (quantity[i] > cekCode.stock) {
-                    return res.status(400).send({ message: `Stok ${panjangCode[i]} hanya terdapat ${cekCode.stock}` });
+                    return res.status(400).send({
+                        message: `Stok ${panjangCode[i]} hanya terdapat ${cekCode.stock}`
+                    });
                 }
             }
 
@@ -518,7 +555,9 @@ async function addToCart(req, res) {
             let panjangNama = nameProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangNama.length != panjangQty.length) {
-                return res.status(400).send({ message: "Panjang quantity dan panjang nameProduct tidak sama!" });
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang nameProduct tidak sama!"
+                });
             }
             //Pengecekan
             for (let i = 0; i < panjangNama.length; i++) {
@@ -529,11 +568,15 @@ async function addToCart(req, res) {
                 });
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.status(404).send({ message: `Produk dengan nama ${panjangNama[i]} tidak ditemukan` });
+                    return res.status(404).send({
+                        message: `Produk dengan nama ${panjangNama[i]} tidak ditemukan`
+                    });
                 }
                 //Cek stok cukup gak
                 if (quantity[i] > cekCode.stock) {
-                    return res.status(400).send({ message: `Stok ${panjangNama[i]} hanya terdapat ${cekCode.stock}` });
+                    return res.status(400).send({
+                        message: `Stok ${panjangNama[i]} hanya terdapat ${cekCode.stock}`
+                    });
                 }
             }
             //Masukin ke cart
@@ -619,8 +662,14 @@ async function addReview(req, res) {
     }
 
     try {
-        let { customerId } = req.params;
-        let { codeOrderDetail, rating, comment } = req.body;
+        let {
+            customerId
+        } = req.params;
+        let {
+            codeOrderDetail,
+            rating,
+            comment
+        } = req.body;
 
         //Cek customer yang review benar telah pesan produk
         let checkPesanan = await OrderDetail.findAll({
@@ -691,11 +740,149 @@ async function addReview(req, res) {
         });
     }
 }
+const getAll = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
+    var username = req.query.username;
+    var email = req.query.email;
+    var sortUsername = req.query.sortByUsername;
+    let customers = await Customer.findAll({
+        attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+        include: [{
+            model: Developer,
+            attributes: [
+                [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+            ]
+        }],
+        where: {
+            developerId: dev.id
+        },
+    });
+    if (!sortUsername) {
+        if (username) {
+            customers = await Customer.findAll({
+                attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                include: [{
+                    model: Developer,
+                    attributes: [
+                        [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                    ]
+                }],
+                where: {
+                    developerId: dev.id,
+                    username: {
+                        [Op.like]: '%' + username + '%'
+                    }
+                },
+            });
+        } else if (email) {
+            customers = await Customer.findAll({
+                attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                include: [{
+                    model: Developer,
+                    attributes: [
+                        [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                    ]
+                }],
+                where: {
+                    developerId: dev.id,
+                    email: {
+                        [Op.like]: '%' + email + '%'
+                    }
+                },
+            });
+        }
+    } else if (sortUsername) {
+        if (username) {
+            if (sortUsername.toLowerCase() == "asc") {
+                customers = await Customer.findAll({
+                    attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id,
+                        username: {
+                            [Op.like]: '%' + username + '%'
+                        }
+                    },
+                    order: [
+                        ['username', 'ASC']
+                    ]
+                });
+            } else if (sortUsername.toLowerCase() == "desc") {
+                customers = await Customer.findAll({
+                    attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id,
+                        username: {
+                            [Op.like]: '%' + username + '%'
+                        }
+                    },
+                    order: [
+                        ['username', 'DESC']
+                    ]
+                });
+            }
 
+        } else if (email) {
+            if (sortUsername.toLowerCase() == "asc") {
+                customers = await Customer.findAll({
+                    attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id,
+                        email: {
+                            [Op.like]: '%' + email + '%'
+                        }
+                    },
+                    order: [
+                        ['username', 'ASC']
+                    ]
+                });
+            } else if (sortUsername.toLowerCase() == "desc") {
+                customers = await Customer.findAll({
+                    attributes: ['id', 'Customer.firstName', 'Customer.lastName', 'email', 'phoneNumber', 'username'],
+                    include: [{
+                        model: Developer,
+                        attributes: [
+                            [sequelize.fn('CONCAT', sequelize.col('Developer.firstName'), ' ', sequelize.col('Developer.lastName')), 'developer_name']
+                        ]
+                    }],
+                    where: {
+                        developerId: dev.id,
+                        email: {
+                            [Op.like]: '%' + email + '%'
+                        }
+                    },
+                    order: [
+                        ['username', 'DESC']
+                    ]
+                });
+            }
+        }
+    }
+    return res.formatter.ok(customers);
+}
 module.exports = {
     viewOrder,
     payOrder,
     checkOut,
     addToCart,
-    addReview
+    addReview,
+    getAll
 }
