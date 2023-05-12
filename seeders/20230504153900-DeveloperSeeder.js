@@ -20,6 +20,7 @@ function generateFakerItems(rowCount) {
     {
       firstName: "Aaron",
       lastName: "Linggo Satria",
+      shop: "CODELINGGO",
       email: "aaronlinggosatria@gmail.com",
       password: bcrypt.hashSync("12345678", 12),
       username: "aaronlinggo",
@@ -31,6 +32,7 @@ function generateFakerItems(rowCount) {
     {
       firstName: "Cyrelle",
       lastName: "Wynette",
+      shop: "markeuuu",
       email: "wcyrelle8@gmail.com",
       password: bcrypt.hashSync("12345678", 12),
       username: "cyrellew",
@@ -42,6 +44,7 @@ function generateFakerItems(rowCount) {
     {
       firstName: "Felicia",
       lastName: "Putri",
+      shop: "felput",
       email: "felput@gmail.com",
       password: bcrypt.hashSync("12345678", 12),
       username: "felput",
@@ -53,6 +56,7 @@ function generateFakerItems(rowCount) {
     {
       firstName: "Vincent",
       lastName: "Vincent",
+      shop: "alaskar",
       email: "alaskar@gmail.com",
       password: bcrypt.hashSync("12345678", 12),
       username: "alaskar",

@@ -16,6 +16,7 @@ const RegisterDeveloper = async (req, res) => {
     const {
         firstName,
         lastName,
+        shop,
         email,
         password,
         username
@@ -25,6 +26,7 @@ const RegisterDeveloper = async (req, res) => {
         let dev = await Developer.create({
             firstName: firstName,
             lastName: lastName,
+            shop: shop,
             email: email,
             password: bcrypt.hashSync(password, 12),
             username: username,
@@ -73,7 +75,7 @@ const LoginDeveloper = async (req, res) => {
     } = req.body;
 
     let dev = await Developer.findOne({
-        attributes: ["id", "username", "password", "email", "subscriptionId", [sequelize.fn('date', sequelize.col('expiredSubscription')), 'expiredSubscription']],
+        attributes: ["id", "username", "shop", "password", "email", "subscriptionId", [sequelize.fn('date', sequelize.col('expiredSubscription')), 'expiredSubscription']],
         include: [{
             model: Subscription,
             attributes: [
@@ -94,6 +96,7 @@ const LoginDeveloper = async (req, res) => {
             var token = jwt.sign({
                 "id": dev.dataValues.id,
                 "username": dev.dataValues.username,
+                "shop": dev.dataValues.username,
                 "email": dev.dataValues.email,
                 "subscription": dev.Subscription.dataValues.type,
                 "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
