@@ -1,4 +1,33 @@
-const { Customer, Order, Product, Payment, OrderDetail } = require('../models');
+const { Op } = require('sequelize');
+const {
+	Customer,
+	Order,
+	Product,
+	Payment,
+	OrderDetail,
+	Sequelize,
+} = require('../models');
+
+const getAllOrder = async (req, res) => {
+	let { orderBy } = req.query;
+
+	try {
+		let data_all_order = await OrderDetail.findAll({
+			include: [
+				{
+					model: Order,
+					include: [{ model: Customer }],
+				},
+				{ model: Product },
+			],
+			order: [[Sequelize.col('createdAt'), 'DESC']],
+		});
+
+		return res.status(200).json(data_all_order);
+	} catch (err) {
+		return res.status(500).json(err.message);
+	}
+};
 
 // NOMOR 11
 const seeAllRequestOrder = async (req, res) => {
@@ -12,12 +41,14 @@ const seeAllRequestOrder = async (req, res) => {
 				},
 				{ model: Product },
 			],
+			order: [[Sequelize.col('createdAt'), 'DESC']],
 		});
 
 		const output = {
 			status: 200,
 			body: data_all_order.map((orders) => ({
-				'Customer Name': orders.Order.Customer.firstName + ' ' + orders.Order.Customer.lastName,
+				'Customer Name':
+					orders.Order.Customer.firstName + ' ' + orders.Order.Customer.lastName,
 				'Product Name': orders.Product.name,
 				'Order Details': {
 					'Order Code': orders.codeOrder,
@@ -77,7 +108,10 @@ const acceptOrder = async (req, res) => {
 			status: resCode,
 			message: message,
 			body: {
-				'Customer Name': data_order.Order.Customer.firstName + ' ' + data_order.Order.Customer.lastName,
+				'Customer Name':
+					data_order.Order.Customer.firstName +
+					' ' +
+					data_order.Order.Customer.lastName,
 				'Product Name': data_order.Product.name,
 				'Order Details': {
 					'Order Code': data_order.codeOrder,
@@ -128,7 +162,10 @@ const completeOrder = async (req, res) => {
 		status: resCode,
 		message: message,
 		body: {
-			'Customer Name': data_order.Order.Customer.firstName + ' ' + data_order.Order.Customer.lastName,
+			'Customer Name':
+				data_order.Order.Customer.firstName +
+				' ' +
+				data_order.Order.Customer.lastName,
 			'Product Name': data_order.Product.name,
 			'Order Details': {
 				'Order Code': data_order.codeOrder,
@@ -159,7 +196,10 @@ const cancelOrder = async (req, res) => {
 		],
 	});
 
-	if (data_order.Order.statusOrder !== 'CANCEL' && data_order.Order.statusOrder !== 'DELIVERED') {
+	if (
+		data_order.Order.statusOrder !== 'CANCEL' &&
+		data_order.Order.statusOrder !== 'DELIVERED'
+	) {
 		await data_order.Order.update({ statusOrder: 'CANCEL' });
 		resCode = 200;
 		message = 'Order successfully cancelled!';
@@ -175,7 +215,10 @@ const cancelOrder = async (req, res) => {
 		status: resCode,
 		message: message,
 		body: {
-			'Customer Name': data_order.Order.Customer.firstName + ' ' + data_order.Order.Customer.lastName,
+			'Customer Name':
+				data_order.Order.Customer.firstName +
+				' ' +
+				data_order.Order.Customer.lastName,
 			'Product Name': data_order.Product.name,
 			'Order Details': {
 				'Order Code': data_order.codeOrder,
@@ -195,4 +238,5 @@ module.exports = {
 	acceptOrder,
 	completeOrder,
 	cancelOrder,
+	getAllOrder,
 };

@@ -1,4 +1,4 @@
-const { Review, Order, Customer, Product, OrderDetail } = require('../models');
+const { Review, Order, Customer, Product, OrderDetail, Sequelize } = require('../models');
 
 // NOMOR 10
 const seeAllReview = async (req, res) => {
@@ -7,6 +7,10 @@ const seeAllReview = async (req, res) => {
 			include: [
 				{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
 				{ model: Customer },
+			],
+			order: [
+				[ Sequelize.col('rating'), 'DESC' ],
+				[ Sequelize.col('createdAt'), 'DESC' ],
 			],
 		});
 
