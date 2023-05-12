@@ -22,16 +22,18 @@ function generateFakerItems(rowCount) {
     if (err) throw err;
   
     for (const file of files) {
-      fs.unlink(path.join("./storage/aaronlinggo", file), (err) => {
-        if (err) throw err;
-      });
+      if (file !== '.gitignore'){
+        fs.unlink(path.join("./storage/aaronlinggo", file), (err) => {
+          if (err) throw err;
+        });
+      }
     }
   });
   fs.readdir("./storage/cyrellew", (err, files) => {
     if (err) throw err;
   
     for (const file of files) {
-      if (file != '.gitkeep'){
+      if (file != '.gitignore'){
         fs.unlink(path.join("./storage/cyrellew", file), (err) => {
           if (err) throw err;
         });
@@ -42,7 +44,7 @@ function generateFakerItems(rowCount) {
     if (err) throw err;
   
     for (const file of files) {
-      if (file != '.gitkeep'){
+      if (file != '.gitignore'){
         fs.unlink(path.join("./storage/alaskar", file), (err) => {
           if (err) throw err;
         });
@@ -53,7 +55,7 @@ function generateFakerItems(rowCount) {
     if (err) throw err;
   
     for (const file of files) {
-      if (file != '.gitkeep'){
+      if (file != '.gitignore'){
         fs.unlink(path.join("./storage/felput", file), (err) => {
           if (err) throw err;
         });
