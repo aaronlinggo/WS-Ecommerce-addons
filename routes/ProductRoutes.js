@@ -104,4 +104,5 @@ router.delete('/delete/:id',
     validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
 router.get('/detail/:id', check("id").notEmpty().withMessage("Product Code is required!"), validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
 
+router.post('/bulkcreate', validationMiddleware, authMiddleware.developerMiddleware, productController.bulkAddProduct);
 module.exports = router;

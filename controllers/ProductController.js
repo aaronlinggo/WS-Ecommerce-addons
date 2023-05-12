@@ -10,7 +10,7 @@ const fs = require("fs");
 const fastCsv = require("fast-csv");
 const options = {
     objectMode: true,
-    delimiter: ",",
+    delimiter: ";",
     quote: null,
     headers: true,
     renameHeaders: false,
@@ -171,12 +171,77 @@ const getAll = async (req, res) => {
 
 }
 const bulkAddProduct = async (req, res) => {
-    var token = req.header("x-auth-token");
-    dev = jwt.verify(token, process.env.JWT_KEY);
-    const data = [];
-    const readableStream = fs.createReadStream("data.csv");
+    try {
+        var token = req.header("x-auth-token");
+        var dev = jwt.verify(token, process.env.JWT_KEY);
+        const data = [];
+        const readableStream = fs.createReadStream("coba.csv");
+        fastCsv
+            .parseStream(readableStream, options)
+            .on("error", (error) => {
+                console.log(error);
+                return res.status(500).send("Internal Server Error");
+            })
+            .on("data", async (row) => {
+                data.push(row);
+            })
+            .on("end", async (rowCount) => {
+                console.log(rowCount);
+                var temp = [];
 
-}
+                let products = await Product.findAll({
+                    attributes: ['codeProduct'],
+                    where: {
+                        developerId: dev.id
+                    },
+                    order: [
+                        ['codeProduct', 'DESC']
+                    ],
+                    limit: 1
+                });
+
+                var angkaterakhir = 0;
+                if (products.length > 0) {
+                    var lastCode = products[0].codeProduct;
+                    angkaterakhir = parseInt(lastCode.slice(4, 9));
+                }
+
+                for (var i = 0; i < data.length; i++) {
+                    var code = "WSEC" + ((angkaterakhir + i + 1) + "").padStart(5, '0');
+                    var hasil = {
+                        codeProduct: code,
+                        developerId: dev.id,
+                        name: data[i].name,
+                        price: data[i].price,
+                        weight: data[i].weight,
+                        photo: data[i].photo,
+                        stock: data[i].stock,
+                        description: data[i].description
+                    }
+
+                    // Validasi kode produk sebelum membuat entri baru
+                    let existingProduct = await Product.findOne({
+                        where: {
+                            codeProduct: code
+                        }
+                    });
+
+                    if (existingProduct) {
+                        console.log(`Kode produk "${code}" sudah ada dalam database. Melewati entri ini.`);
+                    } else {
+                        await Product.create(hasil);
+                        temp.push(hasil);
+                    }
+                }
+                return res.status(200).send(temp);
+            });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(401).send("Unauthorized");
+    }
+};
+
 const addProduct = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
