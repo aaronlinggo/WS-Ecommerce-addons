@@ -5,10 +5,21 @@ module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.bulkInsert('Payments', [
       {
+        codePayment: 'INVOICEORDER00001',
         codeOrder: 'OR00001',
-        subtotal: 999000,
-        paymentStatus: 'UNPAID',
+        subtotal: 14000,
+        paymentStatus: 'unpaid',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
       },
+      {
+        codePayment: 'INVOICEORDER00002',
+        codeOrder: 'OR00002',
+        subtotal: 30000,
+        paymentStatus: 'paid',
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+      }
     ]);
   },
 
