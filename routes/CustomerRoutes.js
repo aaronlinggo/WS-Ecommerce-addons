@@ -1,14 +1,22 @@
-const { response } = require("express");
+const {
+    response
+} = require("express");
 const express = require("express");
-const { Op } = require("sequelize");
+const {
+    Op
+} = require("sequelize");
 
 const CCustomer = require("../controllers/CustomerController");
 // const COrder = require("../controllers/OrderController");
 
 const Order = require('../models').Order;
 const Customer = require('../models').Customer;
+const OrderDetail = require('../models').OrderDetail;
 
-const { check } = require("express-validator");
+const {
+    check
+} = require("express-validator");
+const authMiddleware = require("../middleware/AuthMiddleware")
 
 const router = express.Router();
 
@@ -17,21 +25,7 @@ const router = express.Router();
 //params =  customerId (1-20)
 //body   =  codeOrder (optional
 
-router.get("/order/viewOrder/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({ where: { id: value } }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    })
-    , CCustomer.viewOrder);
-
-
-//PAY ORDER
-//params =  customerId (1-20)
-//body   =  codeOrder
-router.post("/order/payOrder/:customerId",
+router.get("/viewOrder/:customerId",
     check("customerId").custom((value) => {
         return Customer.findOne({ where: { id: value } }).then((user) => {
             if (!user) {
@@ -39,10 +33,38 @@ router.post("/order/payOrder/:customerId",
             }
         })
     }),
+    check("codeOrder").optional().custom((value) => {
+        return Order.findOne({ where: { codeOrder: value } }).then((order) => {
+            if (!order) {
+                return Promise.reject("Orderan dengan kode tersebut tidak ditemukan");
+            }
+        })
+    }),
+    check("statusOrder").optional().custom((value) => {
+        if (value!="PENDING" && value!="PROCESS" && value!="DELIVERED" && value!="CANCEL") {
+            return Promise.reject("Status order hanya boleh diisi dengan (PENDING,PROCESS,DELIVERED,CANCEL)");
+        }
+        return true;
+    }),
+    CCustomer.viewOrder);
+
+
+//PAY ORDER
+//params =  customerId (1-20)
+//body   =  codeOrder
+router.post("/pay/:customerId",
+    check("customerId").custom((value) => {
+        return Customer.findOne({ where: { id: value } }).then((user) => {
+            if (!user) {
+                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+            }
+        })
+    }),
+    check("codeOrder").not().isEmpty().withMessage("codeOrder harus diisi!"),
     check("codeOrder").custom((value) => {
         return Order.findOne({ where: { codeOrder: value } }).then((order) => {
             if (!order) {
-                return Promise.reject("Order dengan Id tersebut tidak ditemukan");
+                return Promise.reject("Order dengan kode tersebut tidak ditemukan");
             }
         })
     })
@@ -54,7 +76,7 @@ router.post("/order/payOrder/:customerId",
 //          origin (1-500), 
 //          destination (1-500)
 
-router.post("/order/checkout/:customerId",
+router.post("/checkout/:customerId",
     check("customerId").custom((value) => {
         return Customer.findOne({ where: { id: value } }).then((user) => {
             if (!user) {
@@ -81,7 +103,8 @@ router.post("/order/checkout/:customerId",
             return Promise.reject("Kode kota tujuan hanya boleh dari 1-500");
         }
         return true;
-    })
+    }),
+    check("address").not().isEmpty().withMessage("address Harus diisi!")
     , CCustomer.checkOut);
 
 //ADD TO CART
@@ -111,5 +134,29 @@ router.post("/addToCart/:customerId",
         return true;
     })
     , CCustomer.addToCart);
+
+//ADD REVIEW
+//params =  customerId (1-20)
+//body =    rating (1 - 5), 
+//          comment (isi review), 
+//          codeOrderDetail (PK Order Detail)
+router.post("/review/:customerId",
+    check("customerId").custom((value) => {
+        return Customer.findOne({ where: { id: value } }).then((user) => {
+            if (!user) {
+                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
+            }
+        })
+    }),
+    check("rating").isInt({ min: 1, max: 5 }).withMessage("Rating harus berupa angka dari 1-5!"),
+    check("comment").notEmpty().withMessage("Comment haruss diisi!"),
+    check("codeOrderDetail").custom((value) => {
+        return OrderDetail.findOne({ where: { codeOrderDetail: value } }).then((orderDetail) => {
+            if (!orderDetail) {
+                return Promise.reject("Order detail dengan code tersebut tidak ditemukan");
+            }
+        })
+    })
+    , CCustomer.addReview);
 
 module.exports = router;

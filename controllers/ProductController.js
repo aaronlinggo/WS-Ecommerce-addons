@@ -43,7 +43,7 @@ const getAll = async (req, res) => {
             "Description": product.description,
             "Developer Name": product["Developer"]["dataValues"]["developer_name"]
         }
-        return res.status(200).send(hasil);
+        return res.formatter.ok(hasil);
     } else {
         let products = await Product.findAll({
             attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
@@ -142,7 +142,7 @@ const getAll = async (req, res) => {
                 "Developer Name": p["Developer"]["dataValues"]["developer_name"]
             };
         })
-        return res.status(200).send(products);
+        return res.formatter.ok(products);
     }
 
 }
@@ -187,7 +187,7 @@ const addProduct = async (req, res) => {
         "Stock": stock,
         "Description": description
     };
-    return res.status(200).send(newProduct);
+    return res.formatter.created(newProduct);
 }
 
 const editProduct = async (req, res) => {
@@ -249,7 +249,7 @@ const editProduct = async (req, res) => {
         "Stock": stock,
         "Description": description
     };
-    return res.status(200).send(editedProduct);
+    return res.formatter.ok(editedProduct);
 }
 
 const deleteProduct = async (req, res) => {
@@ -274,7 +274,7 @@ const deleteProduct = async (req, res) => {
     var hasil = {
         message: "Delete Successful"
     };
-    return res.status(200).send(hasil);
+    return res.formatter.ok(hasil);
 }
 
 const getDetailProduct = async (req, res) => {
@@ -299,7 +299,7 @@ const getDetailProduct = async (req, res) => {
         var hasil = {
             message: "Product Not Found!"
         }
-        return res.status(404).send(hasil);
+        return res.formatter.notFound(hasil);
     }
     var hasil = {
         "Product Code": product.codeProduct,
@@ -311,7 +311,7 @@ const getDetailProduct = async (req, res) => {
         "Stock": product.stock,
         "Description": product.description
     };
-    return res.status(200).send(hasil);
+    return res.formatter.ok(hasil);
 }
 
 module.exports = {

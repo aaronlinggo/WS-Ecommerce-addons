@@ -85,7 +85,7 @@ function generateFakerItems(rowCount) {
       description: faker.commerce.productDescription(),
       createdAt: new Date(),
       updatedAt: new Date(),
-      deletedAt: new Date(),
+      deletedAt: null,
     };
     data.push(newItem);
   }

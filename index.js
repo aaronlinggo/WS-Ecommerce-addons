@@ -11,12 +11,12 @@ const {
     responseEnhancer
 } = require('express-response-formatter');
 const customer = require("./routes/CustomerRoutes");
-// const order = require("./routes/OrderRoutes");
 const product = require("./routes/ProductRoutes");
 const review_routes = require("./routes/review_routes");
 const order_routes = require("./routes/order_routes");
 const subscription = require("./routes/SubscriptionRoutes");
 const rajaongkir = require("./routes/RajaOngkirRoutes");
+const developer = require("./routes/DeveloperRoutes");
 
 const port = 3000;
 
@@ -29,12 +29,12 @@ app.use(express.urlencoded({
 
 app.use("/api/auth", auth);
 app.use("/api/customer", customer);
-// app.use("/api/order", order);
 app.use("/api/product", product);
 app.use("/api/reviewRoutes", review_routes);
 app.use("/api/orderRoutes", order_routes);
 app.use("/api/subscription", subscription);
 app.use("/api/rajaongkir", rajaongkir);
+app.use("/api/developer/order", developer);
 
 cron.schedule('0 0 * * *', async function () {
     console.log("Checking expired subscription!");
