@@ -12,6 +12,7 @@ const router = express.Router();
 router.post('/register-developer',
     check("firstName").isLength({ max: 32 }).withMessage("First Name is required!"),
     check("lastName").isLength({ max: 32 }).withMessage("Last Name is required!"),
+    check("shop").isLength({ max: 32 }).withMessage("Shop is required!"),
     check("email").isEmail().withMessage("E-mail format doesn't match!"),
     check("email").custom((value) => {
         return Developer.findOne({ where: { email: value } }).then((user) => {
