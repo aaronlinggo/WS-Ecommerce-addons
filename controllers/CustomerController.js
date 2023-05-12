@@ -24,18 +24,23 @@ async function viewOrder(req, res) {
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
+    let { customerId } = req.params;
+    let { codeOrder, statusOrder } = req.body;
+    let { sortStatusOrder, sortStatusPayment, sortSubtotal } = req.query;
 
-    let {
-        customerId
-    } = req.params;
-    let {
-        codeOrder,
-        statusOrder
-    } = req.body;
 
     let result;
     try {
         let orderList = [];
+        if (!sortStatusOrder) {
+            sortStatusOrder = "ASC";
+        }
+        if (!sortStatusPayment) {
+            sortStatusPayment = "ASC";
+        }
+        if (!sortSubtotal) {
+            sortSubtotal = "ASC";
+        }
         if (!req.body.codeOrder) {
             //Kalau di body gk ada codeOrder
             //Cari semua order dari user yg login
@@ -50,7 +55,8 @@ async function viewOrder(req, res) {
                         ['courierJne', 'Layanan'],
                         ['costCourier', 'Ongkos Kirim'],
                         ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
+                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)'],
+                        ['$Payment.codeOrder', 'Payment Status']
                     ],
                     include: [{
                         model: OrderDetail,
@@ -65,6 +71,9 @@ async function viewOrder(req, res) {
                                 ['weight', 'Berat Product']
                             ],
                         }]
+                    },{
+                        model : Payment,
+                        as : 'Payment'
                     }],
                     where: {
                         customerId: customerId,
@@ -81,13 +90,13 @@ async function viewOrder(req, res) {
                         ['courierJne', 'Layanan'],
                         ['costCourier', 'Ongkos Kirim'],
                         ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
+                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)'],
+                        ['$Payment.codeOrder$', 'Payment Status']
                     ],
                     include: [{
                         model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
+                        as : 'OrderDetails',
+                        attributes: [['quantity', 'Quantity']],
                         include: [{
                             model: Product,
                             attributes: [
@@ -96,10 +105,17 @@ async function viewOrder(req, res) {
                                 ['weight', 'Berat Product']
                             ],
                         }]
+                    },{
+                        model : Payment,
+                        as : 'Payment'
                     }],
                     where: {
                         customerId: customerId
-                    }
+                    },
+                    order: [
+                        ['statusOrder', sortStatusOrder],
+                        ['subtotal', sortSubtotal]
+                    ]
                 });
             }
         } else {
@@ -134,6 +150,14 @@ async function viewOrder(req, res) {
                         ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                     ],
                     include: [{
+                        model: Payment,
+                        attributes: [
+                            ['paymentStatus', 'Payment Status']
+                        ],
+                        order: [
+                            ['paymentStatus', sortStatusPayment]
+                        ]
+                    },{
                         model: OrderDetail,
                         attributes: [
                             ['quantity', 'Quantity']
@@ -165,6 +189,15 @@ async function viewOrder(req, res) {
                         ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                     ],
                     include: [{
+                        model: Payment,
+                        attributes: [
+                            ['paymentStatus', 'Payment Status'],
+                            ['codeOrder', 'Payment Stus'],
+                        ],
+                        order: [
+                            ['paymentStatus', sortStatusPayment]
+                        ]
+                    },{
                         model: OrderDetail,
                         attributes: [
                             ['quantity', 'Quantity']
@@ -307,17 +340,17 @@ async function checkOut(req, res) {
             );
 
             var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
-                if (s.service == courierJne)
+                if (s.service == courierJne) {
+                    // console.log(s);
                     return s
-            });
-            return res.status(200).send({
-                message: costResult.data.rajaongkir.results[0].costs
+                }
             });
 
             await Order.create({
                 codeOrder: id,
                 customerId: customerId,
                 courierJne: courierJne,
+                address: address,
                 origin: origin,
                 destination: destination,
                 weight: totalWeight,
@@ -346,9 +379,9 @@ async function checkOut(req, res) {
                     product_name: cart[i].Product.name,
                     product_price: formatRupiah(cart[i].Product.price),
                     product_quantity: cart[i].quantity,
-                    product_weight: cart[i].Product.weight,
+                    product_weight: cart[i].Product.weight + " gram",
                     product_subtotal: formatRupiah(parseInt(cart[i].Product.price) * parseInt(cart[i].quantity)),
-                    product_weight_subtotal: parseInt(cart[i].Product.weight) * parseInt(cart[i].quantity)
+                    product_weight_subtotal: parseInt(cart[i].Product.weight) * parseInt(cart[i].quantity) + " gram"
                 }
                 arrOrderDetails.push(newObj);
             }
@@ -378,7 +411,7 @@ async function checkOut(req, res) {
                 tujuan: destination,
                 // layanan: servicesCourier.cost[0].value,
                 layanan: courierJne,
-                berat: totalWeight,
+                berat: totalWeight + " gram",
                 ongkos_kirim: formatRupiah(servicesCourier.cost[0].value),
                 subtotal: formatRupiah(subtotal),
                 estimasi_sampai: servicesCourier.cost[0].etd,
@@ -502,10 +535,10 @@ async function addToCart(req, res) {
                     product_code: produkNow.codeProduct,
                     product_name: produkNow.name,
                     product_price: formatRupiah(produkNow.price),
-                    product_weight: produkNow.weight,
+                    product_weight: produkNow.weight + " gram",
                     quantity: panjangQty[i],
                     subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
-                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i]))
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
                 }
                 isiCart.push(newObj);
                 //Kurangi stok
@@ -592,10 +625,10 @@ async function addToCart(req, res) {
                     product_code: produkNow.codeProduct,
                     product_name: produkNow.name,
                     product_price: formatRupiah(produkNow.price),
-                    product_weight: produkNow.weight,
+                    product_weight: produkNow.weight + " gram",
                     quantity: panjangQty[i],
                     subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
-                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i]))
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
                 }
                 isiCart.push(newObj);
                 //Kurangi stok
@@ -686,7 +719,7 @@ async function addReview(req, res) {
             codeOrderDetail: codeOrderDetail
         });
 
-        let produkNow = await Product.findAll({
+        let produkNow = await Product.findOne({
             include: [{
                 model: OrderDetail,
                 where: {
