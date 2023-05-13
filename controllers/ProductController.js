@@ -191,9 +191,6 @@ const bulkAddProduct = async (req, res) => {
 
                 let products = await Product.findAll({
                     attributes: ['codeProduct'],
-                    where: {
-                        developerId: dev.id
-                    },
                     order: [
                         ['codeProduct', 'DESC']
                     ],
@@ -219,7 +216,6 @@ const bulkAddProduct = async (req, res) => {
                         description: data[i].description
                     }
 
-                    // Validasi kode produk sebelum membuat entri baru
                     let existingProduct = await Product.findOne({
                         where: {
                             codeProduct: code
