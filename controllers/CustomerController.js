@@ -20,12 +20,17 @@ const {
 const {
     sequelize
 } = require('../models');
+
 async function viewOrder(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
-    let { customerId } = req.params;
+    
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
     let { codeOrder, statusOrder } = req.body;
     let { sortStatusOrder, sortStatusPayment, sortSubtotal } = req.query;
 
@@ -248,10 +253,10 @@ async function payOrder(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let result;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
     let {
         codeOrder
     } = req.body;
@@ -306,9 +311,10 @@ async function checkOut(req, res) {
         destination,
         address
     } = req.body;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
 
     try {
         //Buat id order
@@ -452,9 +458,10 @@ async function addToCart(req, res) {
         codeProduct,
         nameProduct
     } = req.body;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
 
     if (!req.body.codeProduct && !req.body.nameProduct) {
         return res.status(400).send({
@@ -512,7 +519,7 @@ async function addToCart(req, res) {
                 let cekInCart = await Cart.findOne({
                     where: {
                         customerId: customerId,
-                        codeProduct: codeProduct
+                        codeProduct: panjangCode[i]
                     }
                 });
                 //Cek barang sudah masuk cart gk
@@ -674,9 +681,10 @@ async function addReview(req, res) {
     }
 
     try {
-        let {
-            customerId
-        } = req.params;
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
         let {
             codeOrderDetail,
             rating,
@@ -695,12 +703,31 @@ async function addReview(req, res) {
             where: {
                 codeOrderDetail: codeOrderDetail,
             }
-        });
-
+        })
 
         if (checkPesanan.length == 0) {
             return res.status(400).send({
                 message: "Kamu tidak memesan produk ini!"
+            });
+        }
+
+        //Cek status order deliverd atau tidak
+        //Kalau blm delivered gak bisa review
+        let checkStatusOrder = await Order.findAll({
+            include : [{
+                model : OrderDetail,
+                where : {
+                    codeOrderDetail : codeOrderDetail
+                }
+            }],
+            where : {
+                statusOrder : "DELIVERED"
+            }
+        });
+
+        if (checkStatusOrder.length == 0) {
+            return res.status(400).send({
+                message: "Pesanan kamu belum selesai!"
             });
         }
 
@@ -761,7 +788,10 @@ async function viewCart(req, res) {
     }
 
     try {
-        let { customerId } = req.params;
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
 
         //View Cart
         //Kalau sdh pernah gk bisa review lagi 
@@ -794,6 +824,176 @@ async function viewCart(req, res) {
             cart: result
         });
 
+    } catch (e) {
+        return res.status(500).send({
+            message: e.toString()
+        });
+    }
+}
+
+async function removeFromCart(req, res) {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
+    }
+    
+    if (!req.body.codeProduct && !req.body.nameProduct) {
+        return res.status(400).send({
+            message: "Salah satu codeProduct atau namaProduct harus diisi!"
+        });
+    }
+    if (req.body.codeProduct && req.body.nameProduct) {
+        return res.status(400).send({
+            message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!"
+        });
+    }
+
+    let {
+        quantity,
+        codeProduct,
+        nameProduct
+    } = req.body;
+
+    
+    try {
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
+        //result
+        let isiCart = [];
+
+        let panjangQty = quantity.split(","); 
+        if (req.body.codeProduct) {
+            let panjangCode = codeProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if (panjangCode.length != panjangQty.length) {
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang codeProduct tidak sama!"
+                });
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangCode.length; i++) {
+                let cekCart = await Cart.findOne({
+                    where : {
+                        customerId : customerId,
+                        codeProduct : panjangCode[i]
+                    }
+                });
+                if(!cekCart){
+                    return res.status(400).send({
+                        message : `Product dengan code ${panjangCode[i]} tersebut tidak ada di cart anda!`
+                    });
+                }
+                if(parseInt(cekCart.quantity)-parseInt(panjangQty[i])>0){
+                    await Cart.update({
+                        quantity : parseInt(cekCart.quantity)-parseInt(panjangQty[i])
+                    },
+                    {                        
+                        where : {
+                            customerId : customerId,
+                            codeProduct : panjangCode[i]
+                        },
+                        force : true
+                    });
+                }
+                else{
+                    await Cart.destroy({
+                        where : {
+                            customerId : customerId,
+                            codeProduct : panjangCode[i]
+                        },
+                        force : true
+                    });
+                }
+                let produkNow = await Product.findOne({
+                    where : {
+                        codeProduct : panjangCode[i]
+                    }
+                });
+                let newObj = {                    
+                    product_code: produkNow.codeProduct,
+                    product_name: produkNow.name,
+                    product_price: formatRupiah(produkNow.price),
+                    product_weight: produkNow.weight + " gram",
+                    quantity: panjangQty[i],
+                    subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
+                }
+                isiCart.push(newObj);
+            }
+        }
+        if (req.body.nameProduct) {
+            let panjangNama = nameProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if (panjangNama.length != panjangQty.length) {
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang nameProduct tidak sama!"
+                });
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangNama.length; i++) {
+                let produkNow = await Product.findOne({
+                    where : {
+                        name : panjangNama[i]
+                    }
+                });
+
+                let cekCart = await Cart.findOne({
+                    where : {
+                        customerId : customerId,
+                        codeProduct : produkNow.codeProduct
+                    }
+                });
+
+                if(!cekCart){
+                    return res.status(400).send({
+                        message : `Product dengan nama ${panjangNama[i]} tersebut tidak ada di cart anda!`
+                    });
+                }
+                if(parseInt(cekCart.quantity)-parseInt(panjangQty[i])>0){
+                    await Cart.update({
+                        quantity : parseInt(cekCart.quantity)-parseInt(panjangQty[i])
+                    },
+                    {                        
+                        where : {
+                            customerId : customerId,
+                            codeProduct : produkNow.codeProduct
+                        },
+                        force : true
+                    });
+                }
+                else{
+                    await Cart.destroy({
+                        where : {
+                            customerId : customerId,
+                            codeProduct : produkNow.codeProduct
+                        },
+                        force : true
+                    });
+                }
+                produkNow = await Product.findOne({
+                    where : {
+                        codeProduct : produkNow.codeProduct
+                    }
+                });
+                let newObj = {                    
+                    product_code: produkNow.codeProduct,
+                    product_name: produkNow.name,
+                    product_price: formatRupiah(produkNow.price),
+                    product_weight: produkNow.weight + " gram",
+                    quantity: panjangQty[i],
+                    subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
+                }
+                isiCart.push(newObj);
+            }
+        }
+
+        return res.status(200).send({
+            removed_product : isiCart
+        });
     } catch (e) {
         return res.status(500).send({
             message: e.toString()
@@ -939,6 +1139,9 @@ const getAll = async (req, res) => {
     }
     return res.formatter.ok(customers);
 }
+
+
+
 module.exports = {
     viewOrder,
     payOrder,
@@ -946,5 +1149,6 @@ module.exports = {
     addToCart,
     addReview,
     getAll,
-    viewCart
+    viewCart,
+    removeFromCart
 }
