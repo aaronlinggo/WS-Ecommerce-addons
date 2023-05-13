@@ -25,18 +25,7 @@ const router = express.Router();
 //params =  customerId (1-20)
 //body   =  codeOrder (optional
 
-router.get("/viewOrder/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({
-            where: {
-                id: value
-            }
-        }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    }),
+router.get("/viewOrder",
     check("codeOrder").optional().custom((value) => {
         return Order.findOne({
             where: {
@@ -54,24 +43,14 @@ router.get("/viewOrder/:customerId",
         }
         return true;
     }),
+    authMiddleware.customerMiddleware,
     CCustomer.viewOrder);
 
 
 //PAY ORDER
 //params =  customerId (1-20)
 //body   =  codeOrder
-router.post("/pay/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({
-            where: {
-                id: value
-            }
-        }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    }),
+router.post("/pay",
     check("codeOrder").not().isEmpty().withMessage("codeOrder harus diisi!"),
     check("codeOrder").custom((value) => {
         return Order.findOne({
@@ -83,7 +62,9 @@ router.post("/pay/:customerId",
                 return Promise.reject("Order dengan kode tersebut tidak ditemukan");
             }
         })
-    }), CCustomer.payOrder);
+    }), 
+    authMiddleware.customerMiddleware,
+    CCustomer.payOrder);
 
 //Check Out
 //params =  customerId (1-20)
@@ -91,18 +72,7 @@ router.post("/pay/:customerId",
 //          origin (1-500), 
 //          destination (1-500)
 
-router.post("/checkout/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({
-            where: {
-                id: value
-            }
-        }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    }),
+router.post("/checkout",
     check("courierJne").custom((value) => {
         if (value == "OKE" || value == "REG") {
             return true;
@@ -110,26 +80,16 @@ router.post("/checkout/:customerId",
             return Promise.reject("Layanan yang tersedia hanya OKE,REG,SPS,YES");
         }
     }),
-    check("address").not().isEmpty().withMessage("address Harus diisi!")
-    , CCustomer.checkOut);
+    check("address").not().isEmpty().withMessage("address Harus diisi!"), 
+    authMiddleware.customerMiddleware,
+    CCustomer.checkOut);
 
 //ADD TO CART
 //params =  customerId (1-20)
 //body =    quantity (1 atau 1,2,3,4,....), 
 //          codeProduct (WSEC00002 / WSEC00001,WSEC00003), 
 //          nameProduct (Small Fresh Car / Small Fresh Car,Electronic Steel Car)
-router.post("/addToCart/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({
-            where: {
-                id: value
-            }
-        }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    }),
+router.post("/addToCart",
     check("quantity").notEmpty().withMessage("Quantity harus diisi (1,2,...)!"),
     check("quantity").custom((value) => {
         let panjangQty = value.split(",");
@@ -138,28 +98,17 @@ router.post("/addToCart/:customerId",
             if (number) {} else {
                 return Promise.reject("Quantity hanya boleh berisi angka (1,2,...)!");
             }
-            // return Promise.reject(panjangQty.length);
         }
         return true;
-    }), CCustomer.addToCart);
+    }), 
+    authMiddleware.customerMiddleware,
+    CCustomer.addToCart);
 
 //ADD REVIEW
-//params =  customerId (1-20)
 //body =    rating (1 - 5), 
 //          comment (isi review), 
 //          codeOrderDetail (PK Order Detail)
-router.post("/review/:customerId",
-    check("customerId").custom((value) => {
-        return Customer.findOne({
-            where: {
-                id: value
-            }
-        }).then((user) => {
-            if (!user) {
-                return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-            }
-        })
-    }),
+router.post("/review",
     check("rating").isInt({
         min: 1,
         max: 5
@@ -175,23 +124,34 @@ router.post("/review/:customerId",
                 return Promise.reject("Order detail dengan code tersebut tidak ditemukan");
             }
         })
-    }), CCustomer.addReview);
+    }),
+    authMiddleware.customerMiddleware,
+     CCustomer.addReview);
 
     
 //View Cart
 //params =  customerId (1-20)
-router.get("/viewCart/:customerId",
-check("customerId").custom((value) => {
-    return Customer.findOne({
-        where: {
-            id: value
+router.get("/viewCart",
+authMiddleware.customerMiddleware, CCustomer.viewCart);
+
+//RREMOVE FROM CART
+//body =    rating (1 - 5), 
+//          comment (isi review), 
+//          codeOrderDetail (PK Order Detail)
+router.delete("/removeCart",
+check("quantity").notEmpty().withMessage("Quantity harus diisi (1,2,...)!"),
+check("quantity").custom((value) => {
+    let panjangQty = value.split(",");
+    for (let i = 0; i < panjangQty.length; i++) {
+        let number = +panjangQty[i];
+        if (number) {} else {
+            return Promise.reject("Quantity hanya boleh berisi angka (1,2,...)!");
         }
-    }).then((user) => {
-        if (!user) {
-            return Promise.reject("Customer dengan Id tersebut tidak ditemukan");
-        }
-    })
-}), CCustomer.viewCart);
+    }
+    return true;
+}), 
+authMiddleware.customerMiddleware,
+CCustomer.removeFromCart);
 
 
 
