@@ -80,7 +80,9 @@ router.post("/checkout",
             return Promise.reject("Layanan yang tersedia hanya OKE,REG,SPS,YES");
         }
     }),
-    check("address").not().isEmpty().withMessage("address Harus diisi!"), 
+    check("address").not().isEmpty().withMessage("address harus diisi!"), 
+    check("origin").not().isEmpty().withMessage("origin harus diisi!"), 
+    check("destination").not().isEmpty().withMessage("destination harus diisi!"), 
     authMiddleware.customerMiddleware,
     CCustomer.checkOut);
 

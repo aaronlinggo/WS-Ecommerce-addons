@@ -335,7 +335,7 @@ async function checkOut(req, res) {
 
         if (cart.length == 0) {
             //status 200? atau brp?
-            return res.status(200).send({
+            return res.status(400).send({
                 message: "Cart anda kosong, minimal terdapat 1 barang di cart!"
             });
         } else {
