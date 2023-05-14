@@ -35,8 +35,8 @@ const getAllReview = async (req, res) => {
 					{ model: Customer },
 				],
 				order: [
-					['rating', 'DESC'],
-					['createdAt', 'DESC'],
+					['rating', 'ASC'],
+					['createdAt', 'ASC'],
 				],
 			});
 		}
