@@ -8,6 +8,7 @@ const Customer = require("../models").Customer;
 const Developer = require("../models").Developer;
 const axios = require("axios").default;
 const jwt = require('jsonwebtoken');
+
 require("dotenv").config();
 const formatRupiah = require('../helpers/formatRupiah');
 const {
@@ -25,82 +26,110 @@ async function viewOrder(req, res) {
     if (!errors.isEmpty()) {
         return res.formatter.badRequest(errors.mapped());
     }
+    
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
+    let { codeOrder, statusOrder } = req.body;
+    let { sortStatusOrder, sortStatusPayment, sortSubtotal } = req.query;
 
-    let {
-        customerId
-    } = req.params;
-    let {
-        codeOrder,
-        statusOrder
-    } = req.body;
 
     let result;
     try {
-        let orderList = [];
+        if (!sortStatusOrder) {
+            sortStatusOrder = "ASC";
+        }
+        if (!sortStatusPayment) {
+            sortStatusPayment = "ASC";
+        }
+        if (!sortSubtotal) {
+            sortSubtotal = "ASC";
+        }
         if (!req.body.codeOrder) {
             //Kalau di body gk ada codeOrder
             //Cari semua order dari user yg login
 
             if (statusOrder) {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        customerId: customerId,
-                        statusOrder: statusOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                customerId: customerId,                                
+                                statusOrder: statusOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             } else {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        customerId: customerId
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                customerId: customerId
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             }
         } else {
@@ -122,66 +151,86 @@ async function viewOrder(req, res) {
                 });
             }
 
-            if (statusOrder) {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+            if (statusOrder) {                
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        customerId: customerId,
-                        statusOrder: statusOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                statusOrder : statusOrder,
+                                codeOrder : codeOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             } else {
-                result = await Order.findAll({
-                    attributes: [
-                        ['codeOrder', 'Code Order'],
-                        ['origin', 'Asal'],
-                        ['destination', 'Tujuan'],
-                        ['address', 'Alamat'],
-                        ['courierJne', 'Layanan'],
-                        ['costCourier', 'Ongkos Kirim'],
-                        ['statusOrder', 'Status'],
-                        ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
-                    ],
-                    include: [{
-                        model: OrderDetail,
-                        attributes: [
-                            ['quantity', 'Quantity']
-                        ],
-                        include: [{
-                            model: Product,
+                result = await Payment.findAll({
+                    attributes: [['paymentStatus', 'Payment Status']],
+                    include: [
+                        {
+                            model: Order,
                             attributes: [
-                                ['name', 'Nama Product'],
-                                ['price', 'Harga Product'],
-                                ['weight', 'Berat Product']
+                                ['codeOrder', 'Code Order'],
+                                ['origin', 'Asal'],
+                                ['destination', 'Tujuan'],
+                                ['address', 'Alamat'],
+                                ['courierJne', 'Layanan'],
+                                ['costCourier', 'Ongkos Kirim'],
+                                ['statusOrder', 'Status'],
+                                ['subtotal', 'Subtotal (Belum Termasuk Ongkir)']
                             ],
-                        }]
-                    }],
-                    where: {
-                        codeOrder: codeOrder
-                    }
+                            include: [{
+                                model: OrderDetail,
+                                attributes: [['quantity', 'Quantity']],
+                                include: [{
+                                    model: Product,
+                                    attributes: [
+                                        ['name', 'Nama Product'],
+                                        ['price', 'Harga Product'],
+                                        ['weight', 'Berat Product']
+                                    ]
+                                }]
+                            }],
+                            where: {
+                                codeOrder : codeOrder
+                            },
+                            order: [
+                                ['statusOrder', sortStatusOrder],
+                                ['subtotal', sortSubtotal]
+                            ]
+                        }],
+                        order : [
+                            ['paymentStatus',sortStatusPayment]
+                        ]
                 });
             }
         }
@@ -204,10 +253,10 @@ async function payOrder(req, res) {
         return res.formatter.badRequest(errors.mapped());
     }
 
-    let result;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
     let {
         codeOrder
     } = req.body;
@@ -262,9 +311,10 @@ async function checkOut(req, res) {
         destination,
         address
     } = req.body;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
 
     try {
         //Buat id order
@@ -296,29 +346,29 @@ async function checkOut(req, res) {
 
             const costResult = await axios.post(
                 "https://api.rajaongkir.com/starter/cost", {
-                    "origin": origin,
-                    "destination": destination,
-                    "weight": totalWeight,
-                    "courier": "jne"
-                }, {
-                    headers: {
-                        key: process.env.RAJAONGKIR_KEY,
-                    }
+                "origin": origin,
+                "destination": destination,
+                "weight": totalWeight,
+                "courier": "jne"
+            }, {
+                headers: {
+                    key: process.env.RAJAONGKIR_KEY,
                 }
+            }
             );
 
             var servicesCourier = costResult.data.rajaongkir.results[0].costs.find((s) => {
-                if (s.service == courierJne)
+                if (s.service == courierJne) {
+                    // console.log(s);
                     return s
-            });
-            return res.status(200).send({
-                message: costResult.data.rajaongkir.results[0].costs
+                }
             });
 
             await Order.create({
                 codeOrder: id,
                 customerId: customerId,
                 courierJne: courierJne,
+                address: address,
                 origin: origin,
                 destination: destination,
                 weight: totalWeight,
@@ -347,9 +397,9 @@ async function checkOut(req, res) {
                     product_name: cart[i].Product.name,
                     product_price: formatRupiah(cart[i].Product.price),
                     product_quantity: cart[i].quantity,
-                    product_weight: cart[i].Product.weight,
+                    product_weight: cart[i].Product.weight + " gram",
                     product_subtotal: formatRupiah(parseInt(cart[i].Product.price) * parseInt(cart[i].quantity)),
-                    product_weight_subtotal: parseInt(cart[i].Product.weight) * parseInt(cart[i].quantity)
+                    product_weight_subtotal: parseInt(cart[i].Product.weight) * parseInt(cart[i].quantity) + " gram"
                 }
                 arrOrderDetails.push(newObj);
             }
@@ -379,7 +429,7 @@ async function checkOut(req, res) {
                 tujuan: destination,
                 // layanan: servicesCourier.cost[0].value,
                 layanan: courierJne,
-                berat: totalWeight,
+                berat: totalWeight + " gram",
                 ongkos_kirim: formatRupiah(servicesCourier.cost[0].value),
                 subtotal: formatRupiah(subtotal),
                 estimasi_sampai: servicesCourier.cost[0].etd,
@@ -408,9 +458,10 @@ async function addToCart(req, res) {
         codeProduct,
         nameProduct
     } = req.body;
-    let {
-        customerId
-    } = req.params;
+    var token = req.header("x-auth-token");
+    let cust = jwt.verify(token, process.env.JWT_KEY);
+    
+    let customerId = cust.id;
 
     if (!req.body.codeProduct && !req.body.nameProduct) {
         return res.status(400).send({
@@ -468,7 +519,7 @@ async function addToCart(req, res) {
                 let cekInCart = await Cart.findOne({
                     where: {
                         customerId: customerId,
-                        codeProduct: codeProduct
+                        codeProduct: panjangCode[i]
                     }
                 });
                 //Cek barang sudah masuk cart gk
@@ -503,10 +554,10 @@ async function addToCart(req, res) {
                     product_code: produkNow.codeProduct,
                     product_name: produkNow.name,
                     product_price: formatRupiah(produkNow.price),
-                    product_weight: produkNow.weight,
+                    product_weight: produkNow.weight + " gram",
                     quantity: panjangQty[i],
                     subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
-                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i]))
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
                 }
                 isiCart.push(newObj);
                 //Kurangi stok
@@ -593,10 +644,10 @@ async function addToCart(req, res) {
                     product_code: produkNow.codeProduct,
                     product_name: produkNow.name,
                     product_price: formatRupiah(produkNow.price),
-                    product_weight: produkNow.weight,
+                    product_weight: produkNow.weight + " gram",
                     quantity: panjangQty[i],
                     subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
-                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i]))
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
                 }
                 isiCart.push(newObj);
                 //Kurangi stok
@@ -630,9 +681,10 @@ async function addReview(req, res) {
     }
 
     try {
-        let {
-            customerId
-        } = req.params;
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
         let {
             codeOrderDetail,
             rating,
@@ -651,12 +703,31 @@ async function addReview(req, res) {
             where: {
                 codeOrderDetail: codeOrderDetail,
             }
-        });
-
+        })
 
         if (checkPesanan.length == 0) {
             return res.status(400).send({
                 message: "Kamu tidak memesan produk ini!"
+            });
+        }
+
+        //Cek status order deliverd atau tidak
+        //Kalau blm delivered gak bisa review
+        let checkStatusOrder = await Order.findAll({
+            include : [{
+                model : OrderDetail,
+                where : {
+                    codeOrderDetail : codeOrderDetail
+                }
+            }],
+            where : {
+                statusOrder : "DELIVERED"
+            }
+        });
+
+        if (checkStatusOrder.length == 0) {
+            return res.status(400).send({
+                message: "Pesanan kamu belum selesai!"
             });
         }
 
@@ -687,7 +758,7 @@ async function addReview(req, res) {
             codeOrderDetail: codeOrderDetail
         });
 
-        let produkNow = await Product.findAll({
+        let produkNow = await Product.findOne({
             include: [{
                 model: OrderDetail,
                 where: {
@@ -708,6 +779,228 @@ async function addReview(req, res) {
         });
     }
 }
+
+async function viewCart(req, res) {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
+    }
+
+    try {
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
+
+        //View Cart
+        //Kalau sdh pernah gk bisa review lagi 
+
+        let result = await Cart.findAll({
+            attributes :[
+                ['quantity','Quantity_in_cart']
+            ],
+            include : [{
+                model : Product,
+                as : 'Product',
+                attributes : [
+                    ['codeProduct','Product Code'],
+                    ['name','Product Name'],
+                    ['price','Product Price'],
+                    ['weight','Product Weight'],
+                ]
+            }],
+            where: {
+                customerId: customerId
+            }
+        });
+
+        if(result.length==0){
+            return res.status(400).send({
+                message: "Cart kamu kosong!"
+            });    
+        }
+        return res.status(200).send({
+            cart: result
+        });
+
+    } catch (e) {
+        return res.status(500).send({
+            message: e.toString()
+        });
+    }
+}
+
+async function removeFromCart(req, res) {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.formatter.badRequest(errors.mapped());
+    }
+    
+    if (!req.body.codeProduct && !req.body.nameProduct) {
+        return res.status(400).send({
+            message: "Salah satu codeProduct atau namaProduct harus diisi!"
+        });
+    }
+    if (req.body.codeProduct && req.body.nameProduct) {
+        return res.status(400).send({
+            message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!"
+        });
+    }
+
+    let {
+        quantity,
+        codeProduct,
+        nameProduct
+    } = req.body;
+
+    
+    try {
+        var token = req.header("x-auth-token");
+        let cust = jwt.verify(token, process.env.JWT_KEY);
+        
+        let customerId = cust.id;
+        //result
+        let isiCart = [];
+
+        let panjangQty = quantity.split(","); 
+        if (req.body.codeProduct) {
+            let panjangCode = codeProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if (panjangCode.length != panjangQty.length) {
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang codeProduct tidak sama!"
+                });
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangCode.length; i++) {
+                let cekCart = await Cart.findOne({
+                    where : {
+                        customerId : customerId,
+                        codeProduct : panjangCode[i]
+                    }
+                });
+                if(!cekCart){
+                    return res.status(400).send({
+                        message : `Product dengan code ${panjangCode[i]} tersebut tidak ada di cart anda!`
+                    });
+                }
+                if(parseInt(cekCart.quantity)-parseInt(panjangQty[i])>0){
+                    await Cart.update({
+                        quantity : parseInt(cekCart.quantity)-parseInt(panjangQty[i])
+                    },
+                    {                        
+                        where : {
+                            customerId : customerId,
+                            codeProduct : panjangCode[i]
+                        },
+                        force : true
+                    });
+                }
+                else{
+                    await Cart.destroy({
+                        where : {
+                            customerId : customerId,
+                            codeProduct : panjangCode[i]
+                        },
+                        force : true
+                    });
+                }
+                let produkNow = await Product.findOne({
+                    where : {
+                        codeProduct : panjangCode[i]
+                    }
+                });
+                let newObj = {                    
+                    product_code: produkNow.codeProduct,
+                    product_name: produkNow.name,
+                    product_price: formatRupiah(produkNow.price),
+                    product_weight: produkNow.weight + " gram",
+                    quantity: panjangQty[i],
+                    subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
+                }
+                isiCart.push(newObj);
+            }
+        }
+        if (req.body.nameProduct) {
+            let panjangNama = nameProduct.split(",");
+            //Cek panjang quantity = codeProduct
+            if (panjangNama.length != panjangQty.length) {
+                return res.status(400).send({
+                    message: "Panjang quantity dan panjang nameProduct tidak sama!"
+                });
+            }
+            //Pengecekan
+            for (let i = 0; i < panjangNama.length; i++) {
+                let produkNow = await Product.findOne({
+                    where : {
+                        name : panjangNama[i]
+                    }
+                });
+
+                let cekCart = await Cart.findOne({
+                    where : {
+                        customerId : customerId,
+                        codeProduct : produkNow.codeProduct
+                    }
+                });
+
+                if(!cekCart){
+                    return res.status(400).send({
+                        message : `Product dengan nama ${panjangNama[i]} tersebut tidak ada di cart anda!`
+                    });
+                }
+                if(parseInt(cekCart.quantity)-parseInt(panjangQty[i])>0){
+                    await Cart.update({
+                        quantity : parseInt(cekCart.quantity)-parseInt(panjangQty[i])
+                    },
+                    {                        
+                        where : {
+                            customerId : customerId,
+                            codeProduct : produkNow.codeProduct
+                        },
+                        force : true
+                    });
+                }
+                else{
+                    await Cart.destroy({
+                        where : {
+                            customerId : customerId,
+                            codeProduct : produkNow.codeProduct
+                        },
+                        force : true
+                    });
+                }
+                produkNow = await Product.findOne({
+                    where : {
+                        codeProduct : produkNow.codeProduct
+                    }
+                });
+                let newObj = {                    
+                    product_code: produkNow.codeProduct,
+                    product_name: produkNow.name,
+                    product_price: formatRupiah(produkNow.price),
+                    product_weight: produkNow.weight + " gram",
+                    quantity: panjangQty[i],
+                    subtotal: formatRupiah(parseInt(produkNow.price) * parseInt(panjangQty[i])),
+                    subtotal_weight: (parseInt(produkNow.weight) * parseInt(panjangQty[i])) + " gram"
+                }
+                isiCart.push(newObj);
+            }
+        }
+
+        return res.status(200).send({
+            removed_product : isiCart
+        });
+    } catch (e) {
+        return res.status(500).send({
+            message: e.toString()
+        });
+    }
+}
+
 const getAll = async (req, res) => {
     var token = req.header("x-auth-token");
     dev = jwt.verify(token, process.env.JWT_KEY);
@@ -846,11 +1139,16 @@ const getAll = async (req, res) => {
     }
     return res.formatter.ok(customers);
 }
+
+
+
 module.exports = {
     viewOrder,
     payOrder,
     checkOut,
     addToCart,
     addReview,
-    getAll
+    getAll,
+    viewCart,
+    removeFromCart
 }

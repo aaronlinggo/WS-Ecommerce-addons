@@ -26,6 +26,7 @@ const storage = multer.diskStorage({
     },
     filename: async function (req, file, callback) {
         if (req.params.id == null) {
+            //masuk add product
             let products = await Product.findOne({
                 order: [
                     ["codeProduct", "DESC"]
@@ -37,6 +38,7 @@ const storage = multer.diskStorage({
             var code = "WSEC" + ((angkaterakhir + 1) + "").padStart(5, '0');
             callback(null, code + '.jpg');
         } else {
+            //masuk edit product
             callback(null, req.params.id + '.jpg');
         }
     }
@@ -102,4 +104,5 @@ router.delete('/delete/:id',
     validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
 router.get('/detail/:id', check("id").notEmpty().withMessage("Product Code is required!"), validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
 
+router.post('/bulkcreate', validationMiddleware, authMiddleware.developerMiddleware, productController.bulkAddProduct);
 module.exports = router;

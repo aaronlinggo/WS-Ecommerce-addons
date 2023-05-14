@@ -19,7 +19,7 @@ module.exports = {
       },
       courierJne: {
         allowNull: false,
-        type: Sequelize.ENUM(['OKE','REG','SPS','YES'])
+        type: Sequelize.ENUM(['OKE','REG'])
       },
       address: {
         allowNull: false,

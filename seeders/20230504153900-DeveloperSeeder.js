@@ -72,6 +72,7 @@ function generateFakerItems(rowCount) {
     const newItem = {
       firstName: firstName,
       lastName: lastName,
+      shop: faker.commerce.department(),
       email: faker.helpers.unique(faker.internet.email),
       password: bcrypt.hashSync("12345678", 12),
       username: (firstName+lastName).toLowerCase(),
