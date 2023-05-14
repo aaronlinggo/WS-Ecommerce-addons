@@ -19,6 +19,7 @@ const {
 const {
     sequelize
 } = require('../models');
+
 async function viewOrder(req, res) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
