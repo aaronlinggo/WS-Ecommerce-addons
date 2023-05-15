@@ -6,6 +6,7 @@ const Developer = require('../models').Developer;
 const TokenDeveloper = require('../models').TokenDeveloper;
 const Subscription = require('../models').Subscription;
 const nodemailer = require("nodemailer");
+const path = require("path");
 const {
     v4: uuidv4
 } = require("uuid");
@@ -36,24 +37,24 @@ transporter.verify((error, success) => {
 });
 
 const sendVerificationEmail = async ({
-    _id,
+    id,
     email
 }, res) => {
     const currentUrl = "http://localhost:3000/";
-    const uniqueString = uuidv4() + _id;
+    const uniqueString = uuidv4() + id;
     const mailoptions = {
         from: process.env.MAIL_USERNAME,
         to: email,
         subject: "Verify Your Email",
         html: `<p>Verify your email address to complete the sign up and login into your account</p>
-        <p> This link expires in <b> 6 hours </b>.</p> 
-        <p>Press <a href=${currentUrl+ "developer/verify/" + _id + "/"+uniqueString}> here </a></p>`
+        <p> This link expires in <b> 8 hours </b>.</p> 
+        <p>Press <a href=${currentUrl+ "api/auth/verify/" + id + "/"+uniqueString}> here </a></p>`
     };
 
     const saltRounds = 10;
     let hasil = bcrypt.hashSync(uniqueString, saltRounds);
     await TokenDeveloper.create({
-        developerId: _id,
+        developerId: id,
         token: hasil,
         createdAt: Date.now(),
         expiredAt: Date.now() + 21600000
@@ -77,9 +78,6 @@ const verifyEmail = async (req, res) => {
             message: "Developer Not Found!"
         });
     } else {
-        const {
-            expiredAt
-        } = td.expiredAt;
         const hashedtoken = td.token;
         if (td.expiredAt < Date.now()) {
             let tdDes = await TokenDeveloper.destroy({
@@ -89,7 +87,7 @@ const verifyEmail = async (req, res) => {
             });
             if (!tdDes) {
                 let message = "Token record doesn't exist or has been verified already. Please sign up or log in.";
-                return res.redirect(`/api/developer/verified/error=true&message=${message}`)
+                return res.redirect(`/api/auth/verified/error=true&message=${message}`)
             } else {
                 let tddev = await Developer.destroy({
                     where: {
@@ -97,13 +95,13 @@ const verifyEmail = async (req, res) => {
                     }
                 });
                 message = "Link has expired. Please sign up again.";
-                return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+                return res.redirect(`/api/auth/verified/error=true&message=${message}`);
             }
         } else {
             //valid token
             if (!bcrypt.compareSync(token, hashedtoken)) {
                 message = "Token not valid";
-                return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+                return res.redirect(`/api/auth/verified/error=true&message=${message}`);
             } else {
                 try {
                     await Developer.update({
@@ -121,7 +119,7 @@ const verifyEmail = async (req, res) => {
                     return res.sendFile(path.join(__dirname, "../views/verified.html"));
                 } catch (error) {
                     message = "Error occured while updating user";
-                    return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+                    return res.redirect(`/api/auth/verified?error=true&message=${message}`);
                 }
 
             }

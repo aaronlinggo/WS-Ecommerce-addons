@@ -14,6 +14,9 @@ module.exports = {
       },
       expiredAt: {
         type: Sequelize.DATE,
+      },
+      updatedAt: {
+        type: Sequelize.DATE
       }
     });
   },
