@@ -35,7 +35,7 @@ const getAll = async (req, res) => {
             include: [{
                 model: Developer,
                 attributes: [
-                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                    'shop'
                 ]
             }],
             where: {
@@ -56,7 +56,7 @@ const getAll = async (req, res) => {
                 "Photo": p.photo,
                 "Stock": p.stock,
                 "Description": p.description,
-                "Developer Name": p["Developer"]["dataValues"]["developer_name"]
+                "Developer Shop": p["Developer"]["dataValues"]["shop"]
             };
         })
         return res.formatter.ok(products);
@@ -66,7 +66,7 @@ const getAll = async (req, res) => {
             include: [{
                 model: Developer,
                 attributes: [
-                    [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                    'shop'
                 ]
             }],
             where: {
@@ -82,7 +82,7 @@ const getAll = async (req, res) => {
                     include: [{
                         model: Developer,
                         attributes: [
-                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                            'shop'
                         ]
                     }],
                     where: {
@@ -100,7 +100,7 @@ const getAll = async (req, res) => {
                     include: [{
                         model: Developer,
                         attributes: [
-                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                            'shop'
                         ]
                     }],
                     where: {
@@ -122,7 +122,7 @@ const getAll = async (req, res) => {
                     include: [{
                         model: Developer,
                         attributes: [
-                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                            'shop'
                         ]
                     }],
                     where: {
@@ -140,7 +140,7 @@ const getAll = async (req, res) => {
                     include: [{
                         model: Developer,
                         attributes: [
-                            [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                            'shop'
                         ]
                     }],
                     where: {
@@ -163,7 +163,7 @@ const getAll = async (req, res) => {
                 "Photo": p.photo,
                 "Stock": p.stock,
                 "Description": p.description,
-                "Developer Name": p["Developer"]["dataValues"]["developer_name"]
+                "Developer Shop": p["Developer"]["dataValues"]["shop"]
             };
         })
         return res.formatter.ok(products);
@@ -323,7 +323,7 @@ const editProduct = async (req, res) => {
         include: [{
             model: Developer,
             attributes: [
-                [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                'shop'
             ]
         }],
         where: {
@@ -333,7 +333,7 @@ const editProduct = async (req, res) => {
     });
     let editedProduct = {
         "Product Code": product.codeProduct,
-        "Developer": product["Developer"]["dataValues"]["developer_name"],
+        "Developer": product["Developer"]["dataValues"]["shop"],
         "Name": name,
         "Price": formatRupiah(price),
         "Weight": weight + " gram",
@@ -378,7 +378,7 @@ const getDetailProduct = async (req, res) => {
         include: [{
             model: Developer,
             attributes: [
-                [sequelize.fn('CONCAT', sequelize.col('firstName'), ' ', sequelize.col('lastName')), 'developer_name']
+                'shop'
             ]
         }],
         where: {
@@ -386,7 +386,6 @@ const getDetailProduct = async (req, res) => {
             developerId: dev.id
         }
     });
-    return res.status(200).send(product);
     if (product.length <= 0) {
         var hasil = {
             message: "Product Not Found!"
@@ -395,7 +394,7 @@ const getDetailProduct = async (req, res) => {
     }
     var hasil = {
         "Product Code": product.codeProduct,
-        "Developer": product["Developer"]["dataValues"]["developer_name"],
+        "Developer Shop": product["Developer"]["dataValues"]["shop"],
         "Name": product.name,
         "Price": formatRupiah(product.price),
         "Weight": product.weight + " gram",
