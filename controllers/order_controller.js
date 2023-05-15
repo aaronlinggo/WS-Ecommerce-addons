@@ -1,7 +1,13 @@
 const { Op } = require('sequelize');
 const { Customer, Order, Product, Payment, OrderDetail } = require('../models');
 
+const jwt = require('jsonwebtoken');
+require("dotenv").config();
+
 const getAllOrder = async (req, res) => {
+    var token = req.header("x-auth-token");
+    dev = jwt.verify(token, process.env.JWT_KEY);
+
 	let { code_order } = req.params;
 	let { sortBySubtotal, searchByStatusPayment, searchByStatusOrder } = req.query;
 	var data_all_order;
@@ -12,7 +18,7 @@ const getAllOrder = async (req, res) => {
 		if (code_order) {
 			let data_order = await Payment.findOne({
 				where: { codeOrder: code_order },
-				include: [{ model: Order, include: [{ model: Customer }] }],
+				include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
 			});
 
 			if (!data_order) {
@@ -49,14 +55,14 @@ const getAllOrder = async (req, res) => {
 			// di sortBySubtotal
 			if (sortBySubtotal) {
 				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer }] }],
+					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
 					order: [['subtotal', sortBySubtotal.toUpperCase()]],
 				});
 			}
 			// di searchByStatusPayment
 			else if (searchByStatusPayment) {
 				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer }] }],
+					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
 					where: { paymentStatus: searchByStatusPayment.toLowerCase() },
 				});
 			}
@@ -66,7 +72,7 @@ const getAllOrder = async (req, res) => {
 					include: [
 						{
 							model: Order,
-							include: [{ model: Customer }],
+							include: [{ model: Customer, where: { developerId: dev.id } }],
 							where: { statusOrder: searchByStatusOrder.toUpperCase() },
 						},
 					],
@@ -75,7 +81,7 @@ const getAllOrder = async (req, res) => {
 			// kalau ga di sort / search, secara otomatis tampil semua orderBy ASC
 			else {
 				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer }] }],
+					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
 				});
 			}
 
@@ -117,11 +123,15 @@ const getAllRequestOrder = async (req, res) => {
 				{
 					model: Order,
 					where: { statusOrder: 'PENDING' },
-					include: [{ model: Customer }],
+					include: [{ model: Customer, where: { developerId: dev.id } }],
 				},
 				{ model: Product },
 			],
 		});
+
+		if (!data_all_order){
+			return res.formatter.notFound("Order not found!")
+		}
 
 		const output = {
 			status: 200,
@@ -155,7 +165,19 @@ const acceptOrder = async (req, res) => {
 	try {
 		let data_payment = await Payment.findOne({
 			where: { codeOrder: id },
+			include: [
+				{
+					model: Order,
+					where: { codeOrder: id },
+					include: [{ model: Customer, where: { developerId: dev.id } }],
+				},
+			],
 		});
+
+		if (!data_payment){
+			return res.formatter.notFound("Payment not found!")
+		}
+		
 
 		let data_order = await OrderDetail.findOne({
 			where: { codeOrder: id },
@@ -163,11 +185,16 @@ const acceptOrder = async (req, res) => {
 				{
 					model: Order,
 					where: { codeOrder: id },
-					include: [{ model: Customer }],
+					include: [{ model: Customer, where: { developerId: dev.id } }],
 				},
 				{ model: Product },
 			],
 		});
+
+		if (!data_order){
+			return res.formatter.notFound("Order not found!")
+		}
+		
 		prev_status = data_order.Order.statusOrder;
 
 		if (data_payment.paymentStatus === 'paid') {
@@ -228,11 +255,16 @@ const completeOrder = async (req, res) => {
 				{
 					model: Order,
 					where: { codeOrder: id },
-					include: [{ model: Customer }],
+					include: [{ model: Customer, where: { developerId: dev.id } }],
 				},
 				{ model: Product },
 			],
 		});
+
+		if (!data_order){
+			return res.formatter.notFound("Order not found!")
+		}
+
 		prev_status = data_order.Order.statusOrder;
 
 		if (data_order.Order.statusOrder === 'PROCESS') {
@@ -287,11 +319,16 @@ const cancelOrder = async (req, res) => {
 				{
 					model: Order,
 					where: { codeOrder: id },
-					include: [{ model: Customer }],
+					include: [{ model: Customer, where: { developerId: dev.id } }],
 				},
 				{ model: Product },
 			],
 		});
+
+		if (!data_order){
+			return res.formatter.notFound("Order not found!")
+		}
+
 		prev_status = data_order.Order.statusOrder;
 
 		if (
@@ -332,6 +369,7 @@ const cancelOrder = async (req, res) => {
 		};
 
 		return res.status(output.status).json(output);
+
 	} catch (err) {
 		return res.status(500).json(err.message);
 	}
