@@ -77,7 +77,9 @@ const verifyEmail = async (req, res) => {
             message: "Developer Not Found!"
         });
     } else {
-        const {expiredAt}= td.expiredAt;
+        const {
+            expiredAt
+        } = td.expiredAt;
         const hashedtoken = td.token;
         if (td.expiredAt < Date.now()) {
             let tdDes = await TokenDeveloper.destroy({
@@ -97,15 +99,31 @@ const verifyEmail = async (req, res) => {
                 message = "Link has expired. Please sign up again.";
                 return res.redirect(`/api/developer/verified/error=true&message=${message}`);
             }
-
-        }
-        else{
+        } else {
             //valid token
-            if(!bcrypt.compareSync(token, hashedtoken)){
-                
-            }else{
-                message = "Error.";
+            if (!bcrypt.compareSync(token, hashedtoken)) {
+                message = "Token not valid";
                 return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+            } else {
+                try {
+                    await Developer.update({
+                        email_verified: true
+                    }, {
+                        where: {
+                            id: td.developerId
+                        }
+                    });
+                    await TokenDeveloper.destroy({
+                        where: {
+                            developerId: td.developerId
+                        }
+                    });
+                    return res.sendFile(path.join(__dirname, "../views/verified.html"));
+                } catch (error) {
+                    message = "Error occured while updating user";
+                    return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+                }
+
             }
 
         }
@@ -114,7 +132,7 @@ const verifyEmail = async (req, res) => {
 }
 
 const verifiedEmail = async (req, res) => {
-    res.sendFile(path.join(__dirname, "../views/verified.html"));
+    return res.sendFile(path.join(__dirname, "../views/verified.html"));
 }
 const RegisterDeveloper = async (req, res) => {
     const {
@@ -180,7 +198,7 @@ const LoginDeveloper = async (req, res) => {
     } = req.body;
 
     let dev = await Developer.findOne({
-        attributes: ["id", "username", "shop", "password", "email", "subscriptionId", [sequelize.fn('date', sequelize.col('expiredSubscription')), 'expiredSubscription']],
+        attributes: ["id", "username", "shop", "password", "email", "subscriptionId", [sequelize.fn('date', sequelize.col('expiredSubscription')), 'expiredSubscription'], "email_verified"],
         include: [{
             model: Subscription,
             attributes: [
@@ -197,24 +215,27 @@ const LoginDeveloper = async (req, res) => {
         if (!bcrypt.compareSync(password, dev.dataValues.password)) {
             return res.formatter.badRequest("Invalid Password");
         } else {
-            var token = jwt.sign({
-                    "id": dev.dataValues.id,
-                    "username": dev.dataValues.username,
-                    "shop": dev.dataValues.username,
-                    "email": dev.dataValues.email,
-                    "subscriptionId": dev.subscriptionId,
-                    "subscription": dev.Subscription.dataValues.type,
-                    "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
-                },
-                process.env.JWT_KEY, {
-                    expiresIn: '500m'
+            if (dev.email_verified == false) {
+                return res.formatter.badRequest("Account hasn't been verified yet, check your inbox!");
+            } else {
+                var token = jwt.sign({
+                        "id": dev.dataValues.id,
+                        "username": dev.dataValues.username,
+                        "shop": dev.dataValues.username,
+                        "email": dev.dataValues.email,
+                        "subscription": dev.Subscription.dataValues.type,
+                        "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
+                    },
+                    process.env.JWT_KEY, {
+                        expiresIn: '500m'
+                    }
+                );
+                var response = {
+                    username: dev.dataValues.username,
+                    token: token
                 }
-            );
-            var response = {
-                username: dev.dataValues.username,
-                token: token
+                return res.formatter.ok(response);
             }
-            return res.formatter.ok(response);
         }
     }
 };
