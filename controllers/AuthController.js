@@ -143,6 +143,7 @@ const LoginDeveloper = async (req, res) => {
                     "username": dev.dataValues.username,
                     "shop": dev.dataValues.username,
                     "email": dev.dataValues.email,
+                    "subscriptionId": dev.subscriptionId,
                     "subscription": dev.Subscription.dataValues.type,
                     "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
                 },
