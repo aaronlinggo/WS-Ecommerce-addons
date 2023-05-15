@@ -2,11 +2,12 @@ const { Op } = require('sequelize');
 const { Customer, Order, Product, Payment, OrderDetail } = require('../models');
 
 const jwt = require('jsonwebtoken');
-require("dotenv").config();
+const { output } = require('pdfkit');
+require('dotenv').config();
 
 const getAllOrder = async (req, res) => {
-    var token = req.header("x-auth-token");
-    dev = jwt.verify(token, process.env.JWT_KEY);
+	var token = req.header('x-auth-token');
+	dev = jwt.verify(token, process.env.JWT_KEY);
 
 	let { code_order } = req.params;
 	let { sortBySubtotal, searchByStatusPayment, searchByStatusOrder } = req.query;
@@ -17,14 +18,24 @@ const getAllOrder = async (req, res) => {
 		// secara default, tampilannya ASC
 		if (code_order) {
 			let data_order = await Payment.findOne({
-				where: { codeOrder: code_order },
-				include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
+				include: [
+					{
+						model: Order,
+						where: { codeOrder: code_order },
+						include: [
+							{
+								model: Customer,
+								where: { developerId: dev.id },
+							},
+						],
+					},
+				],
 			});
 
 			if (!data_order) {
-				output = { status: 404, body: { message: 'Order not found!' } };
+				return res.formatter.notFound('Order not found!');
 			} else {
-				output = {
+				const output = {
 					status: 200,
 					body: {
 						'Customer Name':
@@ -48,66 +59,96 @@ const getAllOrder = async (req, res) => {
 						},
 					},
 				};
+				return res.status(output.status).json(output);
 			}
 		}
 		// tampilkan semua data order
 		else {
-			// di sortBySubtotal
 			if (sortBySubtotal) {
-				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
-					order: [['subtotal', sortBySubtotal.toUpperCase()]],
-				});
-			}
-			// di searchByStatusPayment
-			else if (searchByStatusPayment) {
-				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
-					where: { paymentStatus: searchByStatusPayment.toLowerCase() },
-				});
-			}
-			// di searchByStatusOrder
-			else if (searchByStatusOrder) {
+				// di sortBySubtotal
 				data_all_order = await Payment.findAll({
 					include: [
 						{
 							model: Order,
-							include: [{ model: Customer, where: { developerId: dev.id } }],
-							where: { statusOrder: searchByStatusOrder.toUpperCase() },
+							include: [
+								{ 
+									model: Customer 
+								}
+							],
 						},
 					],
+					where: { $developerId$: dev.id },
+					order: [['subtotal', sortBySubtotal.toUpperCase()]],
 				});
-			}
-			// kalau ga di sort / search, secara otomatis tampil semua orderBy ASC
-			else {
+			} else if (searchByStatusPayment) {
+				// di searchByStatusPayment
 				data_all_order = await Payment.findAll({
-					include: [{ model: Order, include: [{ model: Customer, where: { developerId: dev.id } }] }],
+					include: [
+						{
+							model: Order,
+							include: [{ model: Customer }],
+						},
+					],
+					where: {
+						$developerId$: dev.id,
+						paymentStatus: searchByStatusPayment.toLowerCase(),
+					},
+				});
+			} else if (searchByStatusOrder) {
+				// di searchByStatusOrder
+				data_all_order = await Payment.findAll({
+					include: [
+						{
+							model: Order,
+							include: [{ model: Customer }],
+							where: {
+								statusOrder: searchByStatusOrder.toUpperCase(),
+							},
+						},
+					],
+					where: { $developerId$: dev.id },
+				});
+			} else {
+				// kalau ga di sort / search, secara otomatis tampil semua orderBy ASC
+				data_all_order = await Payment.findAll({
+					include: [
+						{
+							model: Order,
+							include: [
+								{
+									model: Customer,
+									// where: { developerId: dev.id },
+								},
+							],
+						},
+					],
+					where: { $developerId$: dev.id },
 				});
 			}
-
-			output = {
-				status: 200,
-				body: data_all_order.map((orders) => ({
-					'Customer Name':
-						orders.Order.Customer.firstName + ' ' + orders.Order.Customer.lastName,
-					'Customer Address': orders.Order.address,
-					'Order Details': {
-						'Order Code': orders.codeOrder,
-						'Order Status': orders.Order.statusOrder,
-						'Origin Town': orders.Order.origin,
-						'Destination Town': orders.Order.destination,
-						'Item Weight': orders.Order.weight + ' gram',
-						'Courier JNE': orders.Order.courierJne,
-						'Courier Cost': 'Rp ' + orders.Order.costCourier + ',00',
-					},
-					'Payment Details': {
-						'Payment Code': orders.codePayment,
-						'Payment Status': orders.paymentStatus,
-						'Subtotal Payment': 'Rp ' + orders.subtotal + ',00',
-					},
-				})),
-			};
 		}
+
+		const output = {
+			status: 200,
+			body: data_all_order.map((orders) => ({
+				'Customer Name':
+					orders.Order.Customer.firstName + ' ' + orders.Order.Customer.lastName,
+				'Customer Address': orders.Order.address,
+				'Order Details': {
+					'Order Code': orders.codeOrder,
+					'Order Status': orders.Order.statusOrder,
+					'Origin Town': orders.Order.origin,
+					'Destination Town': orders.Order.destination,
+					'Item Weight': orders.Order.weight + ' gram',
+					'Courier JNE': orders.Order.courierJne,
+					'Courier Cost': 'Rp ' + orders.Order.costCourier + ',00',
+				},
+				'Payment Details': {
+					'Payment Code': orders.codePayment,
+					'Payment Status': orders.paymentStatus,
+					'Subtotal Payment': 'Rp ' + orders.subtotal + ',00',
+				},
+			})),
+		};
 
 		return res.status(output.status).json(output);
 	} catch (err) {
@@ -117,6 +158,9 @@ const getAllOrder = async (req, res) => {
 
 // NOMOR 11
 const getAllRequestOrder = async (req, res) => {
+	var token = req.header('x-auth-token');
+	dev = jwt.verify(token, process.env.JWT_KEY);
+
 	try {
 		let data_all_order = await OrderDetail.findAll({
 			include: [
@@ -129,8 +173,8 @@ const getAllRequestOrder = async (req, res) => {
 			],
 		});
 
-		if (!data_all_order){
-			return res.formatter.notFound("Order not found!")
+		if (!data_all_order) {
+			return res.formatter.notFound('Order not found!');
 		}
 
 		const output = {
@@ -159,6 +203,9 @@ const getAllRequestOrder = async (req, res) => {
 
 // NOMOR 12
 const acceptOrder = async (req, res) => {
+	var token = req.header('x-auth-token');
+	dev = jwt.verify(token, process.env.JWT_KEY);
+
 	let { id } = req.params;
 	let prev_status, new_status;
 
@@ -174,10 +221,9 @@ const acceptOrder = async (req, res) => {
 			],
 		});
 
-		if (!data_payment){
-			return res.formatter.notFound("Payment not found!")
+		if (!data_payment) {
+			return res.formatter.notFound('Payment not found!');
 		}
-		
 
 		let data_order = await OrderDetail.findOne({
 			where: { codeOrder: id },
@@ -191,10 +237,10 @@ const acceptOrder = async (req, res) => {
 			],
 		});
 
-		if (!data_order){
-			return res.formatter.notFound("Order not found!")
+		if (!data_order) {
+			return res.formatter.notFound('Order not found!');
 		}
-		
+
 		prev_status = data_order.Order.statusOrder;
 
 		if (data_payment.paymentStatus === 'paid') {
@@ -245,6 +291,9 @@ const acceptOrder = async (req, res) => {
 
 // NOMOR 13
 const completeOrder = async (req, res) => {
+	var token = req.header('x-auth-token');
+	dev = jwt.verify(token, process.env.JWT_KEY);
+
 	let { id } = req.params;
 	let prev_status, new_status;
 
@@ -261,8 +310,8 @@ const completeOrder = async (req, res) => {
 			],
 		});
 
-		if (!data_order){
-			return res.formatter.notFound("Order not found!")
+		if (!data_order) {
+			return res.formatter.notFound('Order not found!');
 		}
 
 		prev_status = data_order.Order.statusOrder;
@@ -309,6 +358,9 @@ const completeOrder = async (req, res) => {
 
 // NOMOR 14
 const cancelOrder = async (req, res) => {
+	var token = req.header('x-auth-token');
+	dev = jwt.verify(token, process.env.JWT_KEY);
+
 	let { id } = req.params;
 	let prev_status, new_status;
 
@@ -325,8 +377,8 @@ const cancelOrder = async (req, res) => {
 			],
 		});
 
-		if (!data_order){
-			return res.formatter.notFound("Order not found!")
+		if (!data_order) {
+			return res.formatter.notFound('Order not found!');
 		}
 
 		prev_status = data_order.Order.statusOrder;
@@ -369,7 +421,6 @@ const cancelOrder = async (req, res) => {
 		};
 
 		return res.status(output.status).json(output);
-
 	} catch (err) {
 		return res.status(500).json(err.message);
 	}
