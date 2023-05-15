@@ -13,24 +13,24 @@ const getAllReview = async (req, res) => {
 	var data_all_review;
 
 	try {
-		// if (sortByRating) {
-		// 	data_all_review = await Review.findAll({
-		// 		include: [
-		// 			{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-		// 			{ model: Customer, where: { developerId: dev.id } },
-		// 		],
-		// 		order: [['rating', sortByRating.toUpperCase()]],
-		// 	});
-		// } else if (sortByCreatedAt) {
-		// 	data_all_review = await Review.findAll({
-		// 		include: [
-		// 			{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-		// 			{ model: Customer, where: { developerId: dev.id }},
-		// 		],
-		// 		order: [['createdAt', sortByCreatedAt.toUpperCase()]],
-		// 	});
-		// } else {
-			const data_all_review = await Review.findAll({
+		if (sortByRating) {
+			data_all_review = await Review.findAll({
+				include: [
+					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+					{ model: Customer, where: { developerId: dev.id } },
+				],
+				order: [['rating', sortByRating.toUpperCase()]],
+			});
+		} else if (sortByCreatedAt) {
+			data_all_review = await Review.findAll({
+				include: [
+					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+					{ model: Customer, where: { developerId: dev.id }},
+				],
+				order: [['createdAt', sortByCreatedAt.toUpperCase()]],
+			});
+		} else {
+			data_all_review = await Review.findAll({
 				include: [
 					{
 						model: OrderDetail,
@@ -38,17 +38,26 @@ const getAllReview = async (req, res) => {
 					},
 					{
 						model: Customer,
-						// where: { developerId: dev.id },
+						where: { developerId: dev.id },
 					},
 				],
-				where: { '$Customer.developerId$': dev.id },
+				// where: { '$developerId$': 6 },
 				order: [
 					['rating', 'ASC'],
 					['createdAt', 'ASC'],
 				],
 			});
 
-		// }
+			// data_all_review = await Review.findAll({
+			// 	include: [
+			// 		{
+			// 			model: Customer,
+			// 			where: { developerId: 2 }
+			// 		},
+			// 	],
+			// 	// where: { '$developerId$': dev.id },
+			// });
+		}
 
 		const output = {
 			status: 200,
@@ -64,8 +73,18 @@ const getAllReview = async (req, res) => {
 			})),
 		};
 
+		// const output = {
+		// 	status: 200,
+		// 	body: data_all_review.map((review) => ({
+		// 		'Customer Name': review.Customer.firstName + ' ' + review.Customer.lastName,
+		// 		Review: {
+		// 			'Rating Product': review.rating,
+		// 			'Comment Product': review.comment,
+		// 		},
+		// 	})),
+		// };
+
 		return res.status(output.status).json(output);
-		// return res.status(200).json(temp);
 	} catch (err) {
 		return res.status(500).json(err.message);
 	}
