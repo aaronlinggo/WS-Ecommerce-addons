@@ -1,14 +1,14 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 require("dotenv").config();
 const Customer = require('../models').Customer;
 const Developer = require('../models').Developer;
+const TokenDeveloper = require('../models').TokenDeveloper;
 const Subscription = require('../models').Subscription;
 const nodemailer = require("nodemailer");
 const {
-    EMAIL,
-    PASSWORD
-} = require('../env.js');
+    v4: uuidv4
+} = require("uuid");
 var moment = require('moment');
 const {
     Op
@@ -17,6 +17,105 @@ const {
     sequelize
 } = require('../models');
 
+let transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    service: process.env.MAIL_SERVICE,
+    secure: true,
+    auth: {
+        user: process.env.MAIL_USERNAME,
+        pass: process.env.MAIL_PASSWORD
+    }
+});
+transporter.verify((error, success) => {
+    if (error) {
+        console.log(error);
+    } else {
+        console.log("Ready for messages");
+        console.log(success);
+    }
+});
+
+const sendVerificationEmail = async ({
+    _id,
+    email
+}, res) => {
+    const currentUrl = "http://localhost:3000/";
+    const uniqueString = uuidv4() + _id;
+    const mailoptions = {
+        from: process.env.MAIL_USERNAME,
+        to: email,
+        subject: "Verify Your Email",
+        html: `<p>Verify your email address to complete the sign up and login into your account</p>
+        <p> This link expires in <b> 6 hours </b>.</p> 
+        <p>Press <a href=${currentUrl+ "developer/verify/" + _id + "/"+uniqueString}> here </a></p>`
+    };
+
+    const saltRounds = 10;
+    let hasil = bcrypt.hashSync(uniqueString, saltRounds);
+    await TokenDeveloper.create({
+        developerId: _id,
+        token: hasil,
+        createdAt: Date.now(),
+        expiredAt: Date.now() + 21600000
+    });
+    transporter.sendMail(mailoptions);
+}
+
+const verifyEmail = async (req, res) => {
+    let {
+        developerId,
+        token
+    } = req.params;
+
+    let td = await TokenDeveloper.findOne({
+        where: {
+            developerId: developerId
+        }
+    });
+    if (!td) {
+        return res.status(404).send({
+            message: "Developer Not Found!"
+        });
+    } else {
+        const {expiredAt}= td.expiredAt;
+        const hashedtoken = td.token;
+        if (td.expiredAt < Date.now()) {
+            let tdDes = await TokenDeveloper.destroy({
+                where: {
+                    developerId: td.developerId
+                }
+            });
+            if (!tdDes) {
+                let message = "Token record doesn't exist or has been verified already. Please sign up or log in.";
+                return res.redirect(`/api/developer/verified/error=true&message=${message}`)
+            } else {
+                let tddev = await Developer.destroy({
+                    where: {
+                        id: td.developerId
+                    }
+                });
+                message = "Link has expired. Please sign up again.";
+                return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+            }
+
+        }
+        else{
+            //valid token
+            if(!bcrypt.compareSync(token, hashedtoken)){
+                
+            }else{
+                message = "Error.";
+                return res.redirect(`/api/developer/verified/error=true&message=${message}`);
+            }
+
+        }
+    }
+
+}
+
+const verifiedEmail = async (req, res) => {
+    res.sendFile(path.join(__dirname, "../views/verified.html"));
+}
 const RegisterDeveloper = async (req, res) => {
     const {
         firstName,
@@ -26,49 +125,7 @@ const RegisterDeveloper = async (req, res) => {
         password,
         username
     } = req.body;
-
     try {
-        // let testAccount = await nodemailer.createTestAccount();
-        // let transporter = nodemailer.createTransport({
-        //     host: "smtp.ethereal.email",
-        //     port: 587,
-        //     secure: false,
-        //     auth: {
-        //         user: testAccount.user,
-        //         pass: testAccount.pass
-        //     }
-        // });
-
-        // let message = {
-        //     from: '"Fred Foo 👻" <foo@example.com>', // sender address
-        //     to: "bar@example.com, baz@example.com", // list of receivers
-        //     subject: "Hello ✔", // Subject line
-        //     text: "Successfully Register", // plain text body
-        //     html: "<b>Successfully Register</b>", // html body
-        // };
-
-        // transporter.sendMail(message).then((info) => {
-        //     return res.status(201).send({
-        //         msg: "you should receive an email",
-        //         info: info.messageId,
-        //         preview: nodemailer.getTestMessageUrl(info)
-        //     });
-        // }).catch(error => {
-        //     console.log(error);
-        //     return res.status(500).send({
-        //         error
-        //     });
-        // })
-
-        //gmail
-        // let config = {
-        //     service: 'gmail',
-        //     auth: {
-        //         user: EMAIL,
-        //         pass: PASSWORD
-        //     }
-        // }
-
         let dev = await Developer.create({
             firstName: firstName,
             lastName: lastName,
@@ -78,7 +135,9 @@ const RegisterDeveloper = async (req, res) => {
             username: username,
             subscriptionId: 1,
             expiredSubscription: null,
+            email_verified: false
         });
+        sendVerificationEmail(dev, res);
         return res.formatter.created(dev);
     } catch (error) {
         console.log(error);
@@ -201,5 +260,7 @@ module.exports = {
     RegisterDeveloper,
     RegisterCustomer,
     LoginDeveloper,
-    LoginCustomer
+    LoginCustomer,
+    verifyEmail,
+    verifiedEmail
 };

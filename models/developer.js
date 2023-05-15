@@ -27,6 +27,10 @@ module.exports = (sequelize, DataTypes) => {
     username: DataTypes.STRING,
     subscriptionId: DataTypes.INTEGER,
     expiredSubscription: DataTypes.DATE,
+    email_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
   }, {
     sequelize,
     modelName: 'Developer',
