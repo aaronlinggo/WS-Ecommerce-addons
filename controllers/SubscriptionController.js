@@ -90,6 +90,7 @@ const BuySubscription = async (req, res) => {
             });
         }
     } else {
+        return res.status(200).send(dev);
         return res.formatter.ok({message: "Developer already subscribe PREMIUM"});
     }
 };
