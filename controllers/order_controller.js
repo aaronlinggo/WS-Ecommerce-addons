@@ -117,7 +117,6 @@ const getAllOrder = async (req, res) => {
 							include: [
 								{
 									model: Customer,
-									// where: { developerId: dev.id },
 								},
 							],
 						},
