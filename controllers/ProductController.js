@@ -31,7 +31,7 @@ const getAll = async (req, res) => {
     // console.log(page + '-' + pageSize + '- ' + offset);
     if (namaprod) {
         let products = await Product.findAll({
-            attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+            attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
             include: [{
                 model: Developer,
                 attributes: [
@@ -62,7 +62,7 @@ const getAll = async (req, res) => {
         return res.formatter.ok(products);
     } else {
         let products = await Product.findAll({
-            attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+            attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
             include: [{
                 model: Developer,
                 attributes: [
@@ -78,7 +78,7 @@ const getAll = async (req, res) => {
         if (ascdescprice) {
             if (ascdescprice.toUpperCase() == "ASC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -96,7 +96,7 @@ const getAll = async (req, res) => {
                 });
             } else if (ascdescprice.toUpperCase() == "DESC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -118,7 +118,7 @@ const getAll = async (req, res) => {
         if (ascdescstock) {
             if (ascdescstock.toUpperCase() == "ASC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -136,7 +136,7 @@ const getAll = async (req, res) => {
                 });
             } else if (ascdescstock.toUpperCase() == "DESC") {
                 products = await Product.findAll({
-                    attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+                    attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
                     include: [{
                         model: Developer,
                         attributes: [
@@ -294,7 +294,7 @@ const editProduct = async (req, res) => {
     var photos = codeProduct + ".jpg";
     var path = "/storage/" + dev.username + "/" + photos;
     let product = await Product.findOne({
-        attributes: ['photo'],
+        attributes: [[sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo']],
         where: {
             codeProduct: codeProduct
         }
@@ -319,7 +319,7 @@ const editProduct = async (req, res) => {
     });
 
     product = await Product.findOne({
-        attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+        attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
         include: [{
             model: Developer,
             attributes: [
@@ -349,7 +349,7 @@ const deleteProduct = async (req, res) => {
     dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     let product = await Product.findOne({
-        attributes: ['photo'],
+        attributes: [[sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo']],
         where: {
             codeProduct: codeProduct,
             developerId: dev.id
@@ -374,7 +374,7 @@ const getDetailProduct = async (req, res) => {
     dev = jwt.verify(token, process.env.JWT_KEY);
     var codeProduct = req.params.id;
     let product = await Product.findOne({
-        attributes: ['codeProduct', 'name', 'price', 'weight', 'photo', 'stock', 'description'],
+        attributes: ['codeProduct', 'name', 'price', 'weight', [sequelize.fn('concat', 'http://', req.headers.host, '/images', sequelize.col('photo')), 'photo'], 'stock', 'description'],
         include: [{
             model: Developer,
             attributes: [
@@ -386,6 +386,7 @@ const getDetailProduct = async (req, res) => {
             developerId: dev.id
         }
     });
+    return res.status(200).send(product);
     if (product.length <= 0) {
         var hasil = {
             message: "Product Not Found!"

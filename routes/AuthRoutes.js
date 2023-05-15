@@ -9,36 +9,36 @@ const {
 } = require('sequelize');
 const router = express.Router();
 
-router.post('/register-developer',AuthController.RegisterDeveloper);
+// router.post('/register-developer',AuthController.RegisterDeveloper);
 
-// router.post('/register-developer',
-//     check("firstName").isLength({ max: 32 }).withMessage("First Name is required!"),
-//     check("lastName").isLength({ max: 32 }).withMessage("Last Name is required!"),
-//     check("shop").isLength({ max: 32 }).withMessage("Shop is required!"),
-//     check("email").isEmail().withMessage("E-mail format doesn't match!"),
-//     check("email").custom((value) => {
-//         return Developer.findOne({ where: { email: value } }).then((user) => {
-//             if (user) {
-//                 return Promise.reject("E-mail already registered!");
-//             }
-//         })
-//     }),
-//     check("username").isLength({ min: 8 }).withMessage("Username minimum length 8 characters!"),
-//     check("username").custom((value) => {
-//         return Developer.findOne({ where: { username: value } }).then((user) => {
-//             if (user) {
-//                 return Promise.reject("Username already registered!");
-//             }
-//         })
-//     }),
-//     check("password").isLength({ min: 8 }).withMessage("Password length minimum 8 characters!"),
-//     check("passwordConfirmation").custom((value, { req }) => {
-//         if (value !== req.body.password)
-//             return Promise.reject("Confirmation Password is not match!")
-//         return true;
-//     }),
-//     validationMiddleware,
-//     AuthController.RegisterDeveloper);
+router.post('/register-developer',
+    check("firstName").isLength({ max: 32 }).withMessage("First Name is required!"),
+    check("lastName").isLength({ max: 32 }).withMessage("Last Name is required!"),
+    check("shop").isLength({ max: 32 }).withMessage("Shop is required!"),
+    check("email").isEmail().withMessage("E-mail format doesn't match!"),
+    check("email").custom((value) => {
+        return Developer.findOne({ where: { email: value } }).then((user) => {
+            if (user) {
+                return Promise.reject("E-mail already registered!");
+            }
+        })
+    }),
+    check("username").isLength({ min: 8 }).withMessage("Username minimum length 8 characters!"),
+    check("username").custom((value) => {
+        return Developer.findOne({ where: { username: value } }).then((user) => {
+            if (user) {
+                return Promise.reject("Username already registered!");
+            }
+        })
+    }),
+    check("password").isLength({ min: 8 }).withMessage("Password length minimum 8 characters!"),
+    check("passwordConfirmation").custom((value, { req }) => {
+        if (value !== req.body.password)
+            return Promise.reject("Confirmation Password is not match!")
+        return true;
+    }),
+    validationMiddleware,
+    AuthController.RegisterDeveloper);
 
 router.post('/register-customer',
     check("developerId").custom((value) => {

@@ -67,6 +67,7 @@ const ExportOrder = async (req, res) => {
         "Content-Disposition",
         "attachment; filename=" + "orders.xlsx"
     );
+    res.setHeader('Content-Length', '1111');
     try {
         return workbook.xlsx.write(res).then(function () {
             res.status(200).end();
