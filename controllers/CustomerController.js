@@ -146,7 +146,7 @@ async function viewOrder(req, res) {
             });
 
             if (!checkOrder) {
-                return res.status(400).send({
+                return res.formatter.badRequest({
                     message: "Kamu tidak memesan orderan ini!"
                 });
             }
@@ -237,7 +237,7 @@ async function viewOrder(req, res) {
         if (result.length == 0) {
             result = "Hasil pencarian tidak menemukan orderan apapun!";
         }
-        return res.status(200).send({
+        return res.formatter.ok({
             order: result
         });
     } catch (e) {
@@ -272,7 +272,7 @@ async function payOrder(req, res) {
     });
 
     if (!checkOrder) {
-        return res.status(400).send({
+        return res.formatter.badRequest({
             message: "Kamu tidak memesan orderan ini!"
         });
     }
@@ -295,7 +295,7 @@ async function payOrder(req, res) {
         }
     });
 
-    return res.status(200).send({
+    return res.formatter.ok({
         message: `Pembayaran untuk pesanan dengan kode ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`
     });
 }
@@ -334,8 +334,7 @@ async function checkOut(req, res) {
         let totalWeight = 0;
 
         if (cart.length == 0) {
-            //status 200? atau brp?
-            return res.status(400).send({
+            return res.formatter.notFound({
                 message: "Cart anda kosong, minimal terdapat 1 barang di cart!"
             });
         } else {
@@ -423,7 +422,7 @@ async function checkOut(req, res) {
                 updatedAt: new Date()
             });
 
-            return res.status(200).send({
+            return res.formatter.ok({
                 message: `Order dengan kode pembayaran ${idPayment} sedang dalam status PENDING`,
                 asal: origin,
                 tujuan: destination,
@@ -464,12 +463,12 @@ async function addToCart(req, res) {
     let customerId = cust.id;
 
     if (!req.body.codeProduct && !req.body.nameProduct) {
-        return res.status(400).send({
+        return res.formatter.badRequest({
             message: "Salah satu codeProduct atau namaProduct harus diisi!"
         });
     }
     if (req.body.codeProduct && req.body.nameProduct) {
-        return res.status(400).send({
+        return res.formatter.badRequest({
             message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!"
         });
     }
@@ -479,12 +478,11 @@ async function addToCart(req, res) {
         let isiCart = [];
 
         let panjangQty = quantity.split(",");
-        // return res.status(400).send(panjangQty[1]);
         if (req.body.codeProduct) {
             let panjangCode = codeProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangCode.length != panjangQty.length) {
-                return res.status(400).send({
+                return res.formatter.badRequest({
                     message: "Panjang quantity dan panjang codeProduct tidak sama!"
                 });
             }
@@ -497,13 +495,13 @@ async function addToCart(req, res) {
                 });
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.status(404).send({
+                    return res.formatter.notFound({
                         message: `Produk dengan code ${panjangCode[i]} tidak ditemukan`
                     });
                 }
                 //Cek stok cukup gak
                 if (quantity[i] > cekCode.stock) {
-                    return res.status(400).send({
+                    return res.formatter.badRequest({
                         message: `Stok ${panjangCode[i]} hanya terdapat ${cekCode.stock}`
                     });
                 }
@@ -574,7 +572,7 @@ async function addToCart(req, res) {
             let panjangNama = nameProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangNama.length != panjangQty.length) {
-                return res.status(400).send({
+                return res.formatter.badRequest({
                     message: "Panjang quantity dan panjang nameProduct tidak sama!"
                 });
             }
@@ -587,13 +585,13 @@ async function addToCart(req, res) {
                 });
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.status(404).send({
+                    return res.formatter.notFound({
                         message: `Produk dengan nama ${panjangNama[i]} tidak ditemukan`
                     });
                 }
                 //Cek stok cukup gak
                 if (quantity[i] > cekCode.stock) {
-                    return res.status(400).send({
+                    return res.formatter.badRequest({
                         message: `Stok ${panjangNama[i]} hanya terdapat ${cekCode.stock}`
                     });
                 }
@@ -662,7 +660,7 @@ async function addToCart(req, res) {
             }
         }
 
-        return res.status(200).send({
+        return res.formatter.ok({
             message: `Barang berhasil dimasukkan ke dalam cart`,
             new_item: isiCart
         });
@@ -706,7 +704,7 @@ async function addReview(req, res) {
         })
 
         if (checkPesanan.length == 0) {
-            return res.status(400).send({
+            return res.formatter.badRequest({
                 message: "Kamu tidak memesan produk ini!"
             });
         }
@@ -726,7 +724,7 @@ async function addReview(req, res) {
         });
 
         if (checkStatusOrder.length == 0) {
-            return res.status(400).send({
+            return res.formatter.badRequest({
                 message: "Pesanan kamu belum selesai!"
             });
         }
@@ -742,7 +740,7 @@ async function addReview(req, res) {
         });
 
         if (sudahReview) {
-            return res.status(400).send({
+            return res.formatter.badRequest({
                 message: `Anda sudah pernah review produk ini di orderan ini!`
             });
         }
@@ -768,7 +766,7 @@ async function addReview(req, res) {
             }]
         });
 
-        return res.status(201).send({
+        return res.formatter.created({
             message: `Berhasil submit review untuk produk ${produkNow.name} dengan rating ${rating}/5 `,
             comment: comment
         });
@@ -816,11 +814,11 @@ async function viewCart(req, res) {
         });
 
         if(result.length==0){
-            return res.status(400).send({
+            return res.formatter.notFound({
                 message: "Cart kamu kosong!"
             });    
         }
-        return res.status(200).send({
+        return res.formatter.ok({
             cart: result
         });
 
@@ -839,12 +837,12 @@ async function removeFromCart(req, res) {
     }
     
     if (!req.body.codeProduct && !req.body.nameProduct) {
-        return res.status(400).send({
+        return res.formatter.badRequest({
             message: "Salah satu codeProduct atau namaProduct harus diisi!"
         });
     }
     if (req.body.codeProduct && req.body.nameProduct) {
-        return res.status(400).send({
+        return res.formatter.badRequest({
             message: "Hanya boleh mengisi salah satu codeProduct atau namaProduct, tidak dapat diisi keduanya!"
         });
     }
@@ -869,7 +867,7 @@ async function removeFromCart(req, res) {
             let panjangCode = codeProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangCode.length != panjangQty.length) {
-                return res.status(400).send({
+                return res.formatter.badRequest({
                     message: "Panjang quantity dan panjang codeProduct tidak sama!"
                 });
             }
@@ -882,7 +880,7 @@ async function removeFromCart(req, res) {
                     }
                 });
                 if(!cekCart){
-                    return res.status(400).send({
+                    return res.formatter.notFound({
                         message : `Product dengan code ${panjangCode[i]} tersebut tidak ada di cart anda!`
                     });
                 }
@@ -928,7 +926,7 @@ async function removeFromCart(req, res) {
             let panjangNama = nameProduct.split(",");
             //Cek panjang quantity = codeProduct
             if (panjangNama.length != panjangQty.length) {
-                return res.status(400).send({
+                return res.formatter.badRequest({
                     message: "Panjang quantity dan panjang nameProduct tidak sama!"
                 });
             }
@@ -948,7 +946,7 @@ async function removeFromCart(req, res) {
                 });
 
                 if(!cekCart){
-                    return res.status(400).send({
+                    return res.formatter.notFound({
                         message : `Product dengan nama ${panjangNama[i]} tersebut tidak ada di cart anda!`
                     });
                 }
@@ -991,7 +989,7 @@ async function removeFromCart(req, res) {
             }
         }
 
-        return res.status(200).send({
+        return res.formatter.ok({
             removed_product : isiCart
         });
     } catch (e) {
