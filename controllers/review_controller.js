@@ -1,4 +1,4 @@
-const { Review, Order, Customer, Product, OrderDetail, Developer } = require('../models');
+const { Review, Order, Customer, Product, OrderDetail } = require('../models');
 
 const jwt = require('jsonwebtoken');
 const { output } = require('pdfkit');
@@ -14,21 +14,35 @@ const getAllReview = async (req, res) => {
 
 	try {
 		if (sortByRating) {
-			data_all_review = await Review.findAll({
-				include: [
-					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-					{ model: Customer, where: { developerId: dev.id } },
-				],
-				order: [['rating', sortByRating.toUpperCase()]],
-			});
+			if (
+				sortByRating.toLowerCase() != 'asc' &&
+				sortByRating.toLowerCase() != 'desc'
+			) {
+				return res.formatter.badRequest('can only be sorted by asc or desc!');
+			} else {
+				data_all_review = await Review.findAll({
+					include: [
+						{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+						{ model: Customer, where: { developerId: dev.id } },
+					],
+					order: [['rating', sortByRating.toUpperCase()]],
+				});
+			}
 		} else if (sortByCreatedAt) {
-			data_all_review = await Review.findAll({
-				include: [
-					{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-					{ model: Customer, where: { developerId: dev.id }},
-				],
-				order: [['createdAt', sortByCreatedAt.toUpperCase()]],
-			});
+			if (
+				sortByCreatedAt.toLowerCase() != 'asc' &&
+				sortByCreatedAt.toLowerCase() != 'desc'
+			) {
+				return res.formatter.badRequest('can only be sorted by asc or desc!');
+			} else {
+				data_all_review = await Review.findAll({
+					include: [
+						{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
+						{ model: Customer, where: { developerId: dev.id } },
+					],
+					order: [['createdAt', sortByCreatedAt.toUpperCase()]],
+				});
+			}
 		} else {
 			data_all_review = await Review.findAll({
 				include: [
