@@ -66,48 +66,73 @@ const getAllOrder = async (req, res) => {
 		else {
 			if (sortBySubtotal) {
 				// di sortBySubtotal
-				data_all_order = await Payment.findAll({
-					include: [
-						{
-							model: Order,
-							include: [
-								{ 
-									model: Customer 
-								}
-							],
-						},
-					],
-					where: { $developerId$: dev.id },
-					order: [['subtotal', sortBySubtotal.toUpperCase()]],
-				});
+				if (
+					sortBySubtotal.toLowerCase() != 'asc' &&
+					sortBySubtotal.toLowerCase() != 'desc'
+				) {
+					return res.formatter.badRequest('can only be sorted by asc or desc!');
+				} else {
+					data_all_order = await Payment.findAll({
+						include: [
+							{
+								model: Order,
+								include: [
+									{
+										model: Customer,
+									},
+								],
+							},
+						],
+						where: { $developerId$: dev.id },
+						order: [['subtotal', sortBySubtotal.toUpperCase()]],
+					});
+				}
 			} else if (searchByStatusPayment) {
 				// di searchByStatusPayment
-				data_all_order = await Payment.findAll({
-					include: [
-						{
-							model: Order,
-							include: [{ model: Customer }],
+				if (
+					searchByStatusPayment.toLowerCase() != 'paid' &&
+					searchByStatusPayment.toLowerCase() != 'unpaid'
+				) {
+					return res.formatter.badRequest('can only be search by paid or unpaid!');
+				} else {
+					data_all_order = await Payment.findAll({
+						include: [
+							{
+								model: Order,
+								include: [{ model: Customer }],
+							},
+						],
+						where: {
+							$developerId$: dev.id,
+							paymentStatus: searchByStatusPayment.toLowerCase(),
 						},
-					],
-					where: {
-						$developerId$: dev.id,
-						paymentStatus: searchByStatusPayment.toLowerCase(),
-					},
-				});
+					});
+				}
 			} else if (searchByStatusOrder) {
 				// di searchByStatusOrder
-				data_all_order = await Payment.findAll({
-					include: [
-						{
-							model: Order,
-							include: [{ model: Customer }],
-							where: {
-								statusOrder: searchByStatusOrder.toUpperCase(),
+				if (
+					searchByStatusOrder.toLowerCase() != 'pending' &&
+					searchByStatusOrder.toLowerCase() != 'process' &&
+					searchByStatusOrder.toLowerCase() != 'delivered' &&
+					searchByStatusOrder.toLowerCase() != 'cancel'
+				) {
+					return res.formatter.badRequest(
+						'can only be search by pending, process, delivered or cancel!'
+					);
+				} else {
+					data_all_order = await Payment.findAll({
+						include: [
+							{
+								model: Order,
+								include: [{ model: Customer }],
+								where: {
+									statusOrder: searchByStatusOrder.toUpperCase(),
+								},
 							},
-						},
-					],
-					where: { $developerId$: dev.id },
-				});
+						],
+						where: { $developerId$: dev.id },
+					});
+				}
 			} else {
 				// kalau ga di sort / search, secara otomatis tampil semua orderBy ASC
 				data_all_order = await Payment.findAll({
