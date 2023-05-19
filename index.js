@@ -38,6 +38,7 @@ app.use("/api/rajaongkir", rajaongkir);
 app.use("/api/developer/order", developer);
 app.use("/api/invoice", invoice);
 app.use('/images', express.static(__dirname + '/storage'));
+app.use('/assets', express.static(__dirname + '/assets'));
 
 cron.schedule('0 0 * * *', async function () {
     console.log("Checking expired subscription!");

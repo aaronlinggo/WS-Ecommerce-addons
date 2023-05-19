@@ -41,7 +41,7 @@ const sendVerificationEmailDeveloper = async ({
     id,
     email
 }, res) => {
-    const currentUrl = "http://localhost:3000/";
+    const currentUrl = `http://localhost:3000/`;
     const uniqueString = uuidv4() + id;
     const mailoptions = {
         from: process.env.MAIL_USERNAME,
@@ -173,7 +173,7 @@ const sendVerificationEmailDeveloper = async ({
                         <td bgcolor="#ffffff" align="center" valign="top"
                             style="padding: 40px 20px 20px 20px; border-radius: 4px 4px 0px 0px; color: #111111; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 48px; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
                             <h1 style="font-size: 48px; font-weight: 400; margin: 2;">Welcome!</h1> <img
-                                src="../assets/logo1.png" width="125" height="120"
+                                src="${currentUrl}assets/logo1.png" width="125" height="120"
                                 style="display: block; border: 0px;" />
                         </td>
                     </tr>
@@ -251,7 +251,7 @@ const sendVerificationEmailCustomer = async ({
     id,
     email
 }, res) => {
-    const currentUrl = "http://localhost:3000/";
+    const currentUrl = `http://localhost:3000/`;
     const uniqueString = uuidv4() + id;
     const mailoptions = {
         from: process.env.MAIL_USERNAME,
@@ -383,7 +383,7 @@ const sendVerificationEmailCustomer = async ({
                         <td bgcolor="#ffffff" align="center" valign="top"
                             style="padding: 40px 20px 20px 20px; border-radius: 4px 4px 0px 0px; color: #111111; font-family: 'Lato', Helvetica, Arial, sans-serif; font-size: 48px; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
                             <h1 style="font-size: 48px; font-weight: 400; margin: 2;">Welcome!</h1> <img
-                                src=" https://img.icons8.com/clouds/100/000000/handshake.png" width="125" height="120"
+                                src="${currentUrl}assets/logo1.png" width="125" height="120"
                                 style="display: block; border: 0px;" />
                         </td>
                     </tr>
@@ -617,7 +617,7 @@ const RegisterDeveloper = async (req, res) => {
             email_verified: false
         });
         sendVerificationEmailDeveloper(dev, res);
-        return res.formatter.created(dev);
+        return res.formatter.created({message: "Register successfully, please check your email!"});
     } catch (error) {
         console.log(error);
         return res.formatter.badRequest(error);
@@ -646,7 +646,7 @@ const RegisterCustomer = async (req, res) => {
             password: bcrypt.hashSync(password, 12)
         });
         sendVerificationEmailCustomer(cust, res);
-        return res.formatter.created(cust);
+        return res.formatter.created({message: "Register successfully, please check your email!"});
     } catch (error) {
         console.log(error);
         return res.formatter.badRequest(error);

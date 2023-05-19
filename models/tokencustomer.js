@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   TokenCustomer.init({
-    developerId: DataTypes.INTEGER,
+    customerId: DataTypes.INTEGER,
     token: DataTypes.STRING,
     createdAt: DataTypes.DATE,
     expiredAt: DataTypes.DATE,
