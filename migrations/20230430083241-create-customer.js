@@ -48,6 +48,11 @@ module.exports = {
       updatedAt: {
         allowNull: false,
         type: Sequelize.DATE
+      },
+      email_verified: {
+        allowNull: false,
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
       }
     });
   },
