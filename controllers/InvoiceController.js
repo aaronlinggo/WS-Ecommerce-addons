@@ -47,7 +47,7 @@ const exportInvoice = async (req, res) => {
         },
         ],
         where: {
-            codeOrder: "OR00001",
+            codeOrder: req.params.codeOrder,
             customerId: cust.id
         }, 
     });
