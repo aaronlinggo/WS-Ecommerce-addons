@@ -7,7 +7,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER,
         references: {
-          model: 'customers',
+          model: 'Customers',
           key: 'id'
         },
       },
@@ -15,7 +15,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.STRING,
         references: {
-          model: 'products',
+          model: 'Products',
           key: 'codeProduct'
         },
       },
