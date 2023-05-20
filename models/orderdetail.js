@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'OrderDetail',
-    tableName: "orderdetails",
+    tableName: "OrderDetails",
   });
   OrderDetail.removeAttribute("id");
   return OrderDetail;
