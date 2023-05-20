@@ -511,7 +511,7 @@ const verifyEmailDeveloper = async (req, res) => {
                             developerId: td.developerId
                         }
                     });
-                    return res.sendFile(path.join(__dirname, "../views/verified.html"));
+                    return res.sendFile(path.join(__dirname, "/views/verified.html"));
                 } catch (error) {
                     message = "Error occured while updating user";
                     return res.redirect(`/api/auth/verified?error=true&message=${message}`);
@@ -578,7 +578,7 @@ const verifyEmailCustomer = async (req, res) => {
                             customerId: tc.customerId
                         }
                     });
-                    return res.sendFile(path.join(__dirname, "../views/verified.html"));
+                    return res.sendFile(path.join(__dirname, "/views/verified.html"));
                 } catch (error) {
                     message = "Error occured while updating user";
                     return res.redirect(`/api/auth/verified?error=true&message=${message}`);
@@ -592,7 +592,7 @@ const verifyEmailCustomer = async (req, res) => {
 }
 
 const verifiedEmail = async (req, res) => {
-    return res.sendFile(path.join(__dirname, "../views/verified.html"));
+    return res.sendFile(path.join(__dirname, "/views/verified.html"));
 }
 
 const RegisterDeveloper = async (req, res) => {
