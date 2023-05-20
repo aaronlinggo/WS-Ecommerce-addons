@@ -6,11 +6,11 @@ const { faker } = require('@faker-js/faker');
 module.exports = {
   async up (queryInterface, Sequelize) {
     const items = generateFakerItems(10);
-    await queryInterface.bulkInsert('Carts', items, {})
+    await queryInterface.bulkInsert('carts', items, {})
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Carts', null, {});
+    await queryInterface.bulkDelete('carts', null, {});
   }
 };
 

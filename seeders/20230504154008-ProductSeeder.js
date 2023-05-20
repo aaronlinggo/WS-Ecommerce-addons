@@ -52,11 +52,11 @@ module.exports = {
       }
     });
     const items = generateFakerItems(500);
-    await queryInterface.bulkInsert('Products', items, {})
+    await queryInterface.bulkInsert('products', items, {})
   },
 
   async down (queryInterface, Sequelize) {
-    await queryInterface.bulkDelete('Products', null, {});
+    await queryInterface.bulkDelete('products', null, {});
   }
 };
 
