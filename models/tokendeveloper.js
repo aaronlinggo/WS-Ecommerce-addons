@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'TokenDeveloper',
-    tableName: 'tokendevelopers'
+    tableName: 'TokenDevelopers'
   });
   TokenDeveloper.removeAttribute('id');
   return TokenDeveloper;
