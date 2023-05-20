@@ -28,6 +28,7 @@ function generateFakerItems(rowCount) {
       updatedAt: new Date(),
       subscriptionId: 1,
       expiredSubscription: null,
+      email_verified: 1
     },
     {
       firstName: "Cyrelle",
@@ -40,6 +41,7 @@ function generateFakerItems(rowCount) {
       updatedAt: new Date(),
       subscriptionId: 1,
       expiredSubscription: null,
+      email_verified: 1
     },
     {
       firstName: "Felicia",
@@ -52,6 +54,7 @@ function generateFakerItems(rowCount) {
       updatedAt: new Date(),
       subscriptionId: 1,
       expiredSubscription: null,
+      email_verified: 1
     },
     {
       firstName: "Vincent",
@@ -64,6 +67,7 @@ function generateFakerItems(rowCount) {
       updatedAt: new Date(),
       subscriptionId: 1,
       expiredSubscription: null,
+      email_verified: 1
     },
   ];
   for (let i = 0; i < rowCount; i++) {
@@ -80,6 +84,7 @@ function generateFakerItems(rowCount) {
       updatedAt: new Date(),
       subscriptionId: 1,
       expiredSubscription: null,
+      email_verified: 1
     };
     data.push(newItem);
   }

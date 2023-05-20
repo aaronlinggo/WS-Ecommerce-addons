@@ -287,13 +287,13 @@ async function payOrder(req, res) {
 
     //Ubah status di tabel order menjadi process
 
-    await Order.update({
-        statusOrder: 'process'
-    }, {
-        where: {
-            codeOrder: codeOrder
-        }
-    });
+    // await Order.update({
+    //     statusOrder: 'process'
+    // }, {
+    //     where: {
+    //         codeOrder: codeOrder
+    //     }
+    // });
 
     return res.formatter.ok({
         message: `Pembayaran untuk pesanan dengan kode ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`
@@ -490,7 +490,8 @@ async function addToCart(req, res) {
             for (let i = 0; i < panjangCode.length; i++) {
                 let cekCode = await Product.findOne({
                     where: {
-                        codeProduct: panjangCode[i]
+                        codeProduct: panjangCode[i],
+                        developerId: cust.developerId
                     }
                 });
                 //Cek codeProduct benar ada gak 
@@ -511,7 +512,8 @@ async function addToCart(req, res) {
             for (let i = 0; i < panjangCode.length; i++) {
                 let cekCode = await Product.findOne({
                     where: {
-                        codeProduct: panjangCode[i]
+                        codeProduct: panjangCode[i],
+                        developerId: cust.developerId
                     }
                 });
                 let cekInCart = await Cart.findOne({

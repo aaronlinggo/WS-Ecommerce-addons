@@ -29,7 +29,8 @@ function generateFakerItems(rowCount) {
       username: (firstName+lastName).toLowerCase(),
       password: bcrypt.hashSync("12345678", 12),
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      email_verified: 1
     };
     data.push(newItem);
   }
