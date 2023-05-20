@@ -41,7 +41,7 @@ const sendVerificationEmailDeveloper = async ({
     id,
     email
 }, res) => {
-    const currentUrl = `http://localhost:3000/`;
+    const currentUrl = `http://addonstore.masuk.id/`;
     const uniqueString = uuidv4() + id;
     const mailoptions = {
         from: process.env.MAIL_USERNAME,
@@ -251,7 +251,7 @@ const sendVerificationEmailCustomer = async ({
     id,
     email
 }, res) => {
-    const currentUrl = `http://localhost:3000/`;
+    const currentUrl = `http://addonstore.masuk.id/`;
     const uniqueString = uuidv4() + id;
     const mailoptions = {
         from: process.env.MAIL_USERNAME,
