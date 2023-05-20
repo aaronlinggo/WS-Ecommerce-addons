@@ -1,0 +1,20 @@
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/addonsto/addonstore/
+    - /bin/cp README.md $DEPLOYPATH
+    - /bin/cp package.json $DEPLOYPATH
+    - /bin/cp package-lock.json $DEPLOYPATH
+    - /bin/cp index.js $DEPLOYPATH
+    - /bin/cp coba.csv $DEPLOYPATH
+    - /bin/cp -R views $DEPLOYPATH
+    - /bin/cp -R storage $DEPLOYPATH
+    - /bin/cp -R seeders $DEPLOYPATH
+    - /bin/cp -R routes $DEPLOYPATH
+    - /bin/cp -R models $DEPLOYPATH
+    - /bin/cp -R migrations $DEPLOYPATH
+    - /bin/cp -R middleware $DEPLOYPATH
+    - /bin/cp -R helpers $DEPLOYPATH
+    - /bin/cp -R controllers $DEPLOYPATH
+    - /bin/cp -R config $DEPLOYPATH
+    - /bin/cp -R assets $DEPLOYPATH
