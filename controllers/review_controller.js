@@ -22,8 +22,8 @@ const getAllReview = async (req, res) => {
 			} else {
 				data_all_review = await Review.findAll({
 					include: [
-						{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-						{ model: Customer, where: { developerId: dev.id } },
+						{ model: OrderDetail, include: [{ model: Order }, { model: Product, where: { developerId: dev.id } }] },
+						{ model: Customer },
 					],
 					order: [['rating', sortByRating.toUpperCase()]],
 				});
@@ -37,8 +37,8 @@ const getAllReview = async (req, res) => {
 			} else {
 				data_all_review = await Review.findAll({
 					include: [
-						{ model: OrderDetail, include: [{ model: Order }, { model: Product }] },
-						{ model: Customer, where: { developerId: dev.id } },
+						{ model: OrderDetail, include: [{ model: Order }, { model: Product, where: { developerId: dev.id } }] },
+						{ model: Customer },
 					],
 					order: [['createdAt', sortByCreatedAt.toUpperCase()]],
 				});
@@ -48,20 +48,21 @@ const getAllReview = async (req, res) => {
 				include: [
 					{
 						model: OrderDetail,
-						include: [{ model: Order }, { model: Product }],
+						include: [{ model: Order }, { model: Product, where: { developerId: dev.id } }],
 					},
 					{
 						model: Customer,
-						where: { developerId: dev.id },
+						// where: { developerId: dev.id }
 					},
 				],
-				// where: { '$developerId$': 6 },
+				// where: { '$`Customer.developerId`$': dev.id },
 				order: [
 					['rating', 'ASC'],
 					['createdAt', 'ASC'],
 				],
 			});
 
+			// return res.status(200).send(data_all_review);
 			// data_all_review = await Review.findAll({
 			// 	include: [
 			// 		{
