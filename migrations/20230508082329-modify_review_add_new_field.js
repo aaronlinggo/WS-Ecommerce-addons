@@ -3,17 +3,17 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
 	async up(queryInterface, Sequelize) {
-		await queryInterface.addColumn('Reviews', 'codeOrderDetail', {
+		await queryInterface.addColumn('reviews', 'codeOrderDetail', {
 			allowNull: false,
 			type: Sequelize.INTEGER,
 			references: {
-				model: 'OrderDetails',
+				model: 'orderdetails',
 				key: 'codeOrderDetail',
 			},
 		});
 	},
 
 	async down(queryInterface, Sequelize) {
-		await queryInterface.removeColumn('Reviews', 'codeOrderDetail');
+		await queryInterface.removeColumn('reviews', 'codeOrderDetail');
 	},
 };
