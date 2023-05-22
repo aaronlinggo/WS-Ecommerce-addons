@@ -2,6 +2,7 @@ const productController = require('../controllers/ProductController');
 const express = require("express");
 const authMiddleware = require("../middleware/AuthMiddleware")
 const validationMiddleware = require("../middleware/ValidationMiddleware")
+const subscriptionMiddleware = require("../middleware/SubscriptionMiddleware")
 const Product = require('../models').Product;
 const {
     check
@@ -47,7 +48,7 @@ var upd = multer({
     storage: storage
 });
 
-router.get('/', validationMiddleware, authMiddleware.developerMiddleware, productController.getAll);
+router.get('/', validationMiddleware, authMiddleware.developerMiddleware, subscriptionMiddleware, productController.getAll);
 
 router.post('/', upd.single('photo'),
     check('photo')
@@ -72,7 +73,7 @@ router.post('/', upd.single('photo'),
     check("weight").notEmpty().withMessage("Weight is required!"),
     check("weight").isNumeric().withMessage("Weight must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
-    validationMiddleware, authMiddleware.developerMiddleware, productController.addProduct);
+    validationMiddleware, authMiddleware.developerMiddleware, subscriptionMiddleware, productController.addProduct);
 
 router.put('/edit/:id', upd.single('photo'),
     check('photo')
@@ -97,12 +98,12 @@ router.put('/edit/:id', upd.single('photo'),
     check("weight").notEmpty().withMessage("Weight is required!"),
     check("weight").isNumeric().withMessage("Weight must be numeric!"),
     check("description").notEmpty().withMessage("Description is required!"),
-    validationMiddleware, authMiddleware.developerMiddleware, productController.editProduct);
+    validationMiddleware, authMiddleware.developerMiddleware, subscriptionMiddleware, productController.editProduct);
 
 router.delete('/delete/:id',
     check("id").notEmpty().withMessage("Product Code is required!"),
-    validationMiddleware, authMiddleware.developerMiddleware, productController.deleteProduct);
+    validationMiddleware, authMiddleware.developerMiddleware, subscriptionMiddleware, productController.deleteProduct);
 router.get('/detail/:id', check("id").notEmpty().withMessage("Product Code is required!"), validationMiddleware, authMiddleware.developerMiddleware, productController.getDetailProduct);
 
-router.post('/bulkcreate', validationMiddleware, authMiddleware.developerMiddleware, productController.bulkAddProduct);
+router.post('/bulkcreate', validationMiddleware, authMiddleware.developerMiddleware, subscriptionMiddleware, productController.bulkAddProduct);
 module.exports = router;

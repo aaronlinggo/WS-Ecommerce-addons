@@ -6,6 +6,6 @@ const {
 const authMiddleware = require("../middleware/AuthMiddleware")
 const router = express.Router();
 
-router.get('/', authMiddleware.developerMiddleware, DeveloperController.ExportOrder);
+router.get('/', authMiddleware.developerMiddleware, subscriptionMiddleware, DeveloperController.ExportOrder);
 
 module.exports = router;
