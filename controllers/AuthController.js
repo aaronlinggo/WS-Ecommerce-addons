@@ -686,6 +686,7 @@ const LoginDeveloper = async (req, res) => {
                         "shop": dev.dataValues.username,
                         "email": dev.dataValues.email,
                         "subscription": dev.Subscription.dataValues.type,
+                        "subscriptionId": dev.dataValues.subscriptionId,
                         "expiredSubscription": moment(dev.dataValues.expiredSubscription).format("MM-DD-YYYY")
                     },
                     process.env.JWT_KEY, {
