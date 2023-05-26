@@ -3,6 +3,7 @@ const router = express.Router();
 
 const order_controller = require('../controllers/order_controller');
 const authMiddleware = require("../middleware/AuthMiddleware")
+const subscriptionMiddleware = require("../middleware/SubscriptionMiddleware")
 
 router.get('/getAllOrder/:code_order?', authMiddleware.developerMiddleware, subscriptionMiddleware, order_controller.getAllOrder);
 router.get('/getAllRequestOrder', authMiddleware.developerMiddleware, subscriptionMiddleware, order_controller.getAllRequestOrder);
