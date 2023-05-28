@@ -276,6 +276,17 @@ async function payOrder(req, res) {
             message: "Kamu tidak memesan orderan ini!"
         });
     }
+    let payment = await Payment.findOne({
+        where: {
+            codeOrder: codeOrder
+        }
+    });
+
+    if(payment.paymentStatus=="paid"){
+        return res.formatter.badRequest({
+            message : `Orderan ini sudah dibayar!`
+        });
+    }
 
     await Payment.update({
         paymentStatus: 'paid'
@@ -296,7 +307,7 @@ async function payOrder(req, res) {
     // });
 
     return res.formatter.ok({
-        message: `Pembayaran untuk pesanan dengan kode ${codeOrder} sudah diverifikasi. Pesanan customer sedang diproses`
+        message: `Pembayaran untuk pesanan dengan kode ${codeOrder} berhasil diverifikasi. Pesanan customer sedang diproses`
     });
 }
 
@@ -494,10 +505,21 @@ async function addToCart(req, res) {
                         developerId: cust.developerId
                     }
                 });
+
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.formatter.notFound({
-                        message: `Produk dengan code ${panjangCode[i]} tidak ditemukan`
+                    let cekProduct = await Product.findOne({
+                        where: {
+                            codeProduct: panjangCode[i],
+                        }
+                    });
+                    if(!cekProduct){
+                        return res.formatter.notFound({
+                            message: `Produk dengan code ${panjangCode[i]} tidak ditemukan`
+                        });
+                    }
+                    return res.formatter.badRequest({
+                        message: `Developer id dari customer dan produk dengan kode ${panjangCode[i]} tidak sama!`
                     });
                 }
                 //Cek stok cukup gak
@@ -582,13 +604,24 @@ async function addToCart(req, res) {
             for (let i = 0; i < panjangNama.length; i++) {
                 let cekCode = await Product.findOne({
                     where: {
-                        name: panjangNama[i]
+                        name: panjangNama[i],
+                        developerId: cust.developerId
                     }
                 });
                 //Cek codeProduct benar ada gak 
                 if (!cekCode) {
-                    return res.formatter.notFound({
-                        message: `Produk dengan nama ${panjangNama[i]} tidak ditemukan`
+                    let cekProduct = await Product.findOne({
+                        where: {
+                            name: panjangNama[i],
+                        }
+                    });
+                    if(!cekProduct){
+                        return res.formatter.notFound({
+                            message: `Produk dengan nama ${panjangNama[i]} tidak ditemukan`
+                        });
+                    }
+                    return res.formatter.badRequest({
+                        message: `Developer id dari customer dan produk dengan nama ${panjangNama[i]} tidak sama!`
                     });
                 }
                 //Cek stok cukup gak
@@ -662,7 +695,7 @@ async function addToCart(req, res) {
             }
         }
 
-        return res.formatter.ok({
+        return res.formatter.created({
             message: `Barang berhasil dimasukkan ke dalam cart`,
             new_item: isiCart
         });
@@ -939,6 +972,12 @@ async function removeFromCart(req, res) {
                         name : panjangNama[i]
                     }
                 });
+
+                if(!produkNow){
+                    return res.formatter.notFound({
+                        message : `Product dengan nama ${panjangNama[i]} tidak ada!`
+                    });
+                }
 
                 let cekCart = await Cart.findOne({
                     where : {
